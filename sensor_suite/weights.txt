@@ -1,0 +1,19 @@
+Philosophy of the Score
+	•	Not all distortion is equal.
+	•	Some tactics (like false urgency) are annoying.
+	•	Others (like agency removal or propaganda bias) are existential threats to autonomy.
+
+So we assign weights based on how much the distortion disrupts clarity and choice.
+
+⸻
+
+ Default Weights (tweakable later):
+
+Sensor	Weight	Why
+Propaganda Tone	1.2	Influences emotional tone and worldview
+Reward Manipulation	1.0	Hooks attention, but often superficial
+False Urgency	1.1	Triggers panic, blocks rational response
+Gatekeeping	1.3	Denies access to knowledge, preserves power
+Narrative Fragility	1.4	Collapses coherence, hides truth behind fog
+Propaganda Bias Index	1.5	Persuades through distortion of reality
+Agency Restriction	1.6	Removes consent, simulates choice
