@@ -48,6 +48,17 @@ You can enhance the button using Hovertip (Python 3.9+)
 from idlelib.tooltip import Hovertip
 Hovertip(flag_button, "Deploying your inner Socrates… Stand back.")
 
+If you’d like to run fallacy_gui.py as logic-ferret from terminal, you can wrap its launch in a main() function:
+
+# Add to bottom of gui/fallacy_gui.py
+
+def main():
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
+
+
 Author
 
 Logic Ferret GUI™
