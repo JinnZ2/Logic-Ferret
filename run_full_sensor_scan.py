@@ -27,6 +27,10 @@ SENSORS = [
     ("🧿 Propaganda Bias", propaganda_bias.assess),
     ("🦝 Logic Fallacy Ferret", logic_fallacy_ferret.assess),
 ]
+SENSORS.extend([
+    ("🔥 Gaslight Frequency Meter", gaslight_frequency_meter.assess),
+    
+])
 
 def run_all(text: str):
     sensor_results: Dict[str, float] = {}
