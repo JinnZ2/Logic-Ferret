@@ -10,6 +10,9 @@ from sensor_suite.sensors import (
     propaganda_bias,
     logic_fallacy_ferret,
     truth_integrity_score,
+gaslight_frequency_meter,
+    agency_detector,
+)
 )
 from typing import Dict
 import sys
