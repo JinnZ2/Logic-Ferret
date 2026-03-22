@@ -10,14 +10,14 @@ FOMO_TRIGGERS = [
 ]
 
 SOCIAL_PROOF_PHRASES = [
-    "join 10,000 others", "everyone’s using", "most popular", "our top choice", "trending now"
+    "join 10,000 others", "everyone's using", "most popular", "our top choice", "trending now"
 ]
 
-EMOTIONAL BRIBES = [
+EMOTIONAL_BRIBES = [
     "you deserve", "you owe it to yourself", "real men/women", "true patriot", "prove you care"
 ]
 
-INSTANT GRATIFICATION LANGUAGE = [
+INSTANT_GRATIFICATION_LANGUAGE = [
     "right now", "immediately", "fastest", "instant access", "get results today"
 ]
 
@@ -27,11 +27,11 @@ def assess(text: str) -> Tuple[float, Dict[str, str]]:
 
     fomo_hits = sum(1 for phrase in FOMO_TRIGGERS if phrase in lower)
     social_hits = sum(1 for phrase in SOCIAL_PROOF_PHRASES if phrase in lower)
-    bribe_hits = sum(1 for phrase in EMOTIONAL BRIBES if phrase in lower)
-    gratification_hits = sum(1 for phrase in INSTANT GRATIFICATION LANGUAGE if phrase in lower)
+    bribe_hits = sum(1 for phrase in EMOTIONAL_BRIBES if phrase in lower)
+    gratification_hits = sum(1 for phrase in INSTANT_GRATIFICATION_LANGUAGE if phrase in lower)
 
     total_weight = (fomo_hits * 1.5) + (social_hits * 1.2) + (bribe_hits * 1.3) + (gratification_hits * 1.4)
-    total_possible = len(FOMO_TRIGGERS) * 1.5 + len(SOCIAL_PROOF_PHRASES) * 1.2 + len(EMOTIONAL BRIBES) * 1.3 + len(INSTANT GRATIFICATION LANGUAGE) * 1.4
+    total_possible = len(FOMO_TRIGGERS) * 1.5 + len(SOCIAL_PROOF_PHRASES) * 1.2 + len(EMOTIONAL_BRIBES) * 1.3 + len(INSTANT_GRATIFICATION_LANGUAGE) * 1.4
 
     score = min(total_weight / total_possible, 1.0)
 

@@ -1,6 +1,6 @@
 # sensor_suite/sensors/logic_fallacy_ferret.py
 
-from .fallacy_overlay import annotate_text
+from sensor_suite.sensors.fallacy_overlay import annotate_text
 
 def assess(text: str):
     annotated, counts = annotate_text(text)

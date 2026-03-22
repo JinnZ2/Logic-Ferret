@@ -8,11 +8,12 @@ from sensor_suite.sensors import (
     narrative_fragility,
     agency_detector,
     propaganda_bias,
-    logic_fallacy_ferret,
+    fallacy_overlay,
     truth_integrity_score,
-gaslight_frequency_meter,
-    agency_detector,
-)
+    gaslight_frequency_meter,
+    responsibility_deflection_sensor,
+    true_accountability_sensor,
+    meritocracy_detector,
 )
 from typing import Dict
 import sys
@@ -25,12 +26,11 @@ SENSORS = [
     ("📖 Narrative Fragility", narrative_fragility.assess),
     ("🧍 Agency Score", agency_detector.assess),
     ("🧿 Propaganda Bias", propaganda_bias.assess),
-    ("🦝 Logic Fallacy Ferret", logic_fallacy_ferret.assess),
-]
-SENSORS.extend([
     ("🔥 Gaslight Frequency Meter", gaslight_frequency_meter.assess),
-    
-])
+    ("🪞 Responsibility Deflection", responsibility_deflection_sensor.assess),
+    ("✅ True Accountability", true_accountability_sensor.assess),
+    ("🏅 Meritocracy Detector", meritocracy_detector.assess),
+]
 
 def run_all(text: str):
     sensor_results: Dict[str, float] = {}

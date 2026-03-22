@@ -25,10 +25,12 @@ Logic-Ferret/
 ├── setup.py                       # Package setup (console_scripts entry point)
 ├── __init__.py                    # Package init
 ├── sensor_suite/                  # Main analysis engine
-│   ├── propaganda_tone.py         # Propaganda tone detection
+│   ├── __init__.py
 │   ├── weights.txt                # Sensor weight configuration
-│   └── sensors/                   # Individual detection sensors (11 modules)
+│   └── sensors/                   # Individual detection sensors (12 modules)
+│       ├── __init__.py
 │       ├── fallacy_overlay.py     # 7 logical fallacies (strawman, ad hominem, etc.)
+│       ├── propaganda_tone.py     # Propaganda tone detection
 │       ├── propaganda_bias.py     # Informative vs. persuasive language
 │       ├── reward_manipulation.py # FOMO, social proof, emotional bribes
 │       ├── false_urgency.py       # Hype language, fake countdowns
@@ -38,6 +40,7 @@ Logic-Ferret/
 │       ├── gaslight_frequency_meter.py      # Gaslighting patterns
 │       ├── responsibility_deflection_sensor.py  # Blame shifting, credit stealing
 │       ├── true_accountability_sensor.py    # Accountability markers, humility
+│       ├── meritocracy_detector.py          # Competence vs. false authority
 │       └── truth_integrity_score.py         # C3 composite score calculator
 ├── README.md
 └── LICENSE
@@ -72,7 +75,7 @@ def assess(text: str) -> Tuple[float, Dict[str, Any]]:
 ### CLI (`run_full_sensor_scan.py`)
 
 - Takes a text file path as argument
-- Runs all 11 sensors sequentially
+- Runs all sensors sequentially
 - Prints per-sensor scores, flags, and composite C3 score
 
 ## Running the Project
@@ -108,10 +111,6 @@ logic-ferret
 
 ### Known Issues
 
-- `sensor_suite/` and `sensor_suite/sensors/` are missing `__init__.py` files, which can cause import failures
-- `reward_manipulation.py` has syntax errors (spaces in variable names)
-- `responsibility_deflection_sensor.py` contains markdown formatting mixed with Python code
-- `run_full_sensor_scan.py` has import syntax issues
 - No test suite exists
 
 ### Testing
