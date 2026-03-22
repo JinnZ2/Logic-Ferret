@@ -28,3 +28,11 @@ def annotate_text(text: str) -> Tuple[str, Dict[str, int]]:
             annotated = annotated[:start] + tag + annotated[start:end] + tag + annotated[end:]
 
     return annotated, counts
+
+
+def assess(text: str) -> Tuple[float, Dict[str, int]]:
+    """Sensor-compatible interface. Higher score = more fallacies detected."""
+    _, counts = annotate_text(text)
+    total = sum(counts.values())
+    score = min(total / 10.0, 1.0)
+    return score, counts

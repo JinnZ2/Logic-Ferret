@@ -1,50 +1,52 @@
-# /run_full_sensor_scan.py
+# run_full_sensor_scan.py
 
 from sensor_suite.sensors import (
     propaganda_tone,
     reward_manipulation,
     false_urgency,
-    gatekeeping_sensor,
+    gatekeeping,
     narrative_fragility,
-    agency_detector,
+    agency_restriction,
     propaganda_bias,
     fallacy_overlay,
     truth_integrity_score,
-    gaslight_frequency_meter,
-    responsibility_deflection_sensor,
-    true_accountability_sensor,
-    meritocracy_detector,
+    gaslight_frequency,
+    responsibility_deflection,
+    true_accountability,
+    meritocracy,
 )
 from typing import Dict
 import sys
 
+# (display_name, weight_key, sensor_function)
 SENSORS = [
-    ("🎭 Propaganda Tone", propaganda_tone.assess),
-    ("💰 Reward Manipulation", reward_manipulation.assess),
-    ("⏰ False Urgency", false_urgency.assess),
-    ("🔐 Gatekeeping", gatekeeping_sensor.assess),
-    ("📖 Narrative Fragility", narrative_fragility.assess),
-    ("🧍 Agency Score", agency_detector.assess),
-    ("🧿 Propaganda Bias", propaganda_bias.assess),
-    ("🔥 Gaslight Frequency Meter", gaslight_frequency_meter.assess),
-    ("🪞 Responsibility Deflection", responsibility_deflection_sensor.assess),
-    ("✅ True Accountability", true_accountability_sensor.assess),
-    ("🏅 Meritocracy Detector", meritocracy_detector.assess),
+    ("🎭 Propaganda Tone", "Propaganda Tone", propaganda_tone.assess),
+    ("💰 Reward Manipulation", "Reward Manipulation", reward_manipulation.assess),
+    ("⏰ False Urgency", "False Urgency", false_urgency.assess),
+    ("🔐 Gatekeeping", "Gatekeeping", gatekeeping.assess),
+    ("📖 Narrative Fragility", "Narrative Fragility", narrative_fragility.assess),
+    ("🧍 Agency Restriction", "Agency Restriction", agency_restriction.assess),
+    ("🧿 Propaganda Bias", "Propaganda Bias", propaganda_bias.assess),
+    ("🦝 Fallacy Overlay", "Fallacy Overlay", fallacy_overlay.assess),
+    ("🔥 Gaslight Frequency", "Gaslight Frequency", gaslight_frequency.assess),
+    ("🪞 Responsibility Deflection", "Responsibility Deflection", responsibility_deflection.assess),
+    ("✅ True Accountability", "True Accountability", true_accountability.assess),
+    ("🏅 Meritocracy", "Meritocracy", meritocracy.assess),
 ]
 
 def run_all(text: str):
     sensor_results: Dict[str, float] = {}
 
     print("🧠 FULL SENSOR FUSION ANALYSIS\n" + "=" * 40)
-    for name, sensor in SENSORS:
+    for display_name, key, sensor in SENSORS:
         try:
             score, flags = sensor(text)
-            sensor_results[name] = score
-            print(f"\n{name} Score: {score:.2f}")
+            sensor_results[key] = score
+            print(f"\n{display_name} Score: {score:.2f}")
             for k, v in flags.items():
                 print(f"  - {k}: {v}")
         except Exception as e:
-            print(f"⚠️  Error in {name}: {str(e)}")
+            print(f"⚠️  Error in {display_name}: {str(e)}")
 
     # Composite Score
     print("\n🧮 Calculating Composite Truth Integrity Score...")

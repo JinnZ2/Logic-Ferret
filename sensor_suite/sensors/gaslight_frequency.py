@@ -1,4 +1,4 @@
-# sensor_suite/sensors/gaslight_frequency_meter.py
+# sensor_suite/sensors/gaslight_frequency.py
 
 from typing import Tuple, Dict
 import re
@@ -25,6 +25,10 @@ def assess(text: str) -> Tuple[float, Dict[str, int]]:
             flags[label] = count
             total_hits += count
 
-    score = max(0.0, 1.0 - min(total_hits / 5.0, 1.0))  # 1.0 = low gaslight, 0.0 = high
+    # Higher = more gaslighting detected (consistent with all other sensors)
+    score = min(total_hits / 5.0, 1.0)
+
+    flags["Total Gaslight Hits"] = total_hits
+    flags["Gaslight Score"] = f"{score:.2f}"
 
     return score, flags

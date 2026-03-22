@@ -7,13 +7,26 @@ So we assign weights based on how much the distortion disrupts clarity and choic
 
 ⸻
 
- Default Weights (tweakable later):
+ Default Weights (tweakable in truth_integrity_score.py):
 
-Sensor	Weight	Why
-Propaganda Tone	1.2	Influences emotional tone and worldview
-Reward Manipulation	1.0	Hooks attention, but often superficial
-False Urgency	1.1	Triggers panic, blocks rational response
-Gatekeeping	1.3	Denies access to knowledge, preserves power
-Narrative Fragility	1.4	Collapses coherence, hides truth behind fog
-Propaganda Bias Index	1.5	Persuades through distortion of reality
-Agency Restriction	1.6	Removes consent, simulates choice
+Sensor                        Weight  Why
+Propaganda Tone               1.2     Influences emotional tone and worldview
+Reward Manipulation           1.0     Hooks attention, but often superficial
+False Urgency                 1.1     Triggers panic, blocks rational response
+Gatekeeping                   1.3     Denies access to knowledge, preserves power
+Narrative Fragility           1.4     Collapses coherence, hides truth behind fog
+Propaganda Bias               1.5     Persuades through distortion of reality
+Agency Restriction            1.6     Removes consent, simulates choice (highest threat)
+Fallacy Overlay               1.3     Classic logical fallacies undermine reasoning
+Gaslight Frequency            1.5     Reality distortion erodes trust in perception
+Responsibility Deflection     1.2     Blame shifting obscures accountability
+True Accountability*          1.0     Positive signal — inverted in composite scoring
+Meritocracy*                  1.1     Positive signal — inverted in composite scoring
+
+⸻
+
+Scoring Direction:
+	•	Most sensors: higher score = more distortion detected (bad)
+	•	Positive sensors (*): higher score = more accountability/merit (good)
+	  These are automatically inverted by the C3 calculator so that
+	  high accountability *reduces* the composite distortion score.
