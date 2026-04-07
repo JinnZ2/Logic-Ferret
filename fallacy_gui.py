@@ -19,6 +19,8 @@ def run_analysis():
 
 def load_file():
     file_path = filedialog.askopenfilename()
+    if not file_path:
+        return
     with open(file_path, "r") as f:
         input_box.delete("1.0", tk.END)
         input_box.insert(tk.END, f.read())
@@ -50,9 +52,9 @@ tk.Label(root, text="Fallacy Counts", fg="#ffffff", bg="#1e1e1e").pack()
 count_box = scrolledtext.ScrolledText(root, height=5, width=50, bg="#2e2e2e", fg="#00ff99")
 count_box.pack(padx=10, pady=5)
 
-root.mainloop()
+def main():
+    root.mainloop()
 
 
-
-cd logic-monk-stack/gui
-python fallacy_gui.py
+if __name__ == "__main__":
+    main()
