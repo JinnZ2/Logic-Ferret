@@ -1,14 +1,17 @@
 # run_conflict_diagnosis.py
-#
+# ============================================================
 # Standalone runner for the Conflict Diagnosis Framework.
+# The ferret goes in. The truth comes out.
+#
 # Usage:
-#   python run_conflict_diagnosis.py path/to/text.txt [--table] [--flow] [--json]
+#   python run_conflict_diagnosis.py <text_file> [--table] [--flow] [--json]
 #
 # Modes:
-#   --table  Print the diagnostic table (default)
-#   --flow   Print the step-by-step flowchart
-#   --json   Print raw JSON output for programmatic use
-#   (no flag defaults to both table + flowchart)
+#   --table   Diagnostic table (layer signals + evidence)
+#   --flow    Flowchart trace (the ferret's tunnel path)
+#   --json    Raw JSON (for pipelines, LLMs, downstream tools)
+#   (no flag) Table + flowchart
+# ============================================================
 
 import sys
 import json
@@ -22,15 +25,16 @@ from sensor_suite.sensors.conflict_diagnosis import (
 
 def main():
     if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
-        print("Conflict Diagnosis Framework -- Logic Ferret")
+        print("Logic Ferret -- Conflict Diagnosis Framework")
+        print("\"The problem is never what it claims to be.\"")
         print()
         print("Usage: python run_conflict_diagnosis.py <text_file> [options]")
         print()
         print("Options:")
-        print("  --table   Show diagnostic table")
-        print("  --flow    Show flowchart trace")
-        print("  --json    Output raw JSON diagnosis")
-        print("  (no flag) Show table + flowchart")
+        print("  --table   Diagnostic table (signals + evidence)")
+        print("  --flow    Flowchart trace (tunnel path)")
+        print("  --json    Raw JSON output")
+        print("  (no flag) Table + flowchart")
         sys.exit(0)
 
     filepath = sys.argv[1]
@@ -44,12 +48,11 @@ def main():
         sys.exit(1)
 
     if not text.strip():
-        print("File is empty.")
+        print("Empty file. The ferret needs something to sniff.")
         sys.exit(1)
 
     if "--json" in flags:
         result = diagnose(text)
-        # Convert match lists to keep JSON clean
         for layer in result["layers"]:
             layer["matches"] = layer["matches"][:10]
         print(json.dumps(result, indent=2))

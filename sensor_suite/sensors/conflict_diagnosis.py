@@ -1,109 +1,172 @@
 # sensor_suite/sensors/conflict_diagnosis.py
+# ============================================================
+# CONFLICT DIAGNOSIS FRAMEWORK
+# "The problem is never what it claims to be."
+# ============================================================
 #
-# Conflict Diagnosis Framework
-# Separates stated reasons from real drivers in conflicts and policies.
-# Diagnostic, not judgmental -- surfaces structural incentives hidden
-# behind official narratives.
+# WHY A FERRET?
+#   A ferret is a physics exploit wrapped in fur.
 #
-# 8 Layers:
-#   1. Stated Problem identification
-#   2. Feasibility / Reality Check
-#   3. Incentive Mapping
-#   4. Systemic Alignment
-#   5. Consequence Analysis
-#   6. Hidden Driver inference
-#   7. Peripheral Signal detection
-#   8. Feedback Loop closure
+#   - FLEXIBLE SPINE: 30 vertebrae, can bend nearly 180 degrees.
+#     Squeezes through gaps that seem sealed shut -- like the gap
+#     between a stated reason and the real one.
+#
+#   - TUNNELING: Evolved to hunt in burrows. It doesn't go around
+#     the problem, it goes through it. Straight into the dark
+#     where the thing is hiding.
+#
+#   - PERSISTENCE: Once locked on, a ferret doesn't quit. It will
+#     follow a trail through twists, dead ends, and misdirection
+#     until it reaches the source.
+#
+#   - STASHING: Ferrets hoard. They collect and cache objects in
+#     hidden spots. This sensor collects receipts -- every matched
+#     pattern is evidence stashed for the diagnostic table.
+#
+#   - WAR DANCE: The "weasel war dance" -- erratic, unpredictable
+#     lateral movement. Approaches the problem from angles the
+#     narrative didn't account for. Eight layers, eight angles.
+#
+#   - SCENT TRACKING: Ferrets locate prey by scent through walls
+#     of dirt. This framework tracks incentive trails through walls
+#     of institutional language.
+#
+#   - FERRETING OUT: The verb exists because the animal does.
+#     "To ferret out" = to search tenaciously for something hidden.
+#     That's the whole job.
+#
+# HOW IT WORKS:
+#   Feed it text. Eight diagnostic layers flex through the
+#   narrative like a ferret through a burrow. Each layer checks
+#   for a different type of camouflage. The more layers light up,
+#   the higher the Camouflage Score.
+#
+# LAYERS (pipeline order):
+#   1. Stated Problem     -- what you're told to worry about
+#   2. Feasibility Gap    -- does the "fix" actually fix anything?
+#   3. Incentive Mapping  -- who gets paid if nothing changes?
+#   4. Systemic Alignment -- does the system reward solving or stalling?
+#   5. Consequence Check  -- what actually happened vs. what was promised
+#   6. Hidden Driver      -- the real reason, under the hood
+#   7. Peripheral Signals -- the people on the ground calling bullshit
+#   8. Feedback Loops     -- the self-reinforcing cycle that keeps it stuck
+#
+# INTERFACE:
+#   assess(text)              -> (score, flags)     # sensor suite compat
+#   diagnose(text)            -> full structured dict
+#   print_diagnosis_table()   -> formatted table
+#   print_flowchart()         -> step-by-step pipeline trace
 
 import re
 from typing import Tuple, Dict, List
 
-# ---------------------------------------------------------------------------
-# Layer 1 -- Stated Problem / Official Narrative markers
-# ---------------------------------------------------------------------------
+
+# ============================================================
+# PATTERN REGISTRY
+# ============================================================
+# Each layer has a list of regex patterns grouped by semantic
+# intent. Extend any list without guessing categories.
+# ============================================================
+
+# [LAYER 1] STATED PROBLEM
+# The official story. The thing they want you focused on.
 STATED_PROBLEM_MARKERS = [
+    # justification framing
     r"\bwe must\b.*\bbecause\b",
     r"\bthe reason\b.*\bis\b",
     r"\bthis is necessary\b",
+    r"\bthis policy exists because\b",
+    # authority invocation
     r"\bfor security reasons\b",
     r"\bto protect\b",
+    r"\bin order to safeguard\b",
+    r"\baccording to officials\b",
+    r"\bthe official position\b",
+    # urgency / compulsion
     r"\bwe have no choice but to\b",
     r"\bforced to act\b",
     r"\bthe threat of\b",
-    r"\bin order to safeguard\b",
-    r"\bthis policy exists because\b",
-    r"\bthe official position\b",
-    r"\baccording to officials\b",
+    # narrative markers
     r"\bthe stated goal\b",
     r"\bwe are told\b",
 ]
 
-# ---------------------------------------------------------------------------
-# Layer 2 -- Feasibility / Logic gap indicators
-# ---------------------------------------------------------------------------
+# [LAYER 2] FEASIBILITY GAP
+# The fix doesn't fix the stated problem. The ferret's spine
+# bends through this gap -- if it fits, the gap is real.
 FEASIBILITY_GAP_MARKERS = [
+    # solution-problem mismatch
     r"\bdoes not actually\b",
     r"\bfails to address\b",
     r"\bwon't solve\b",
     r"\bwill not fix\b",
+    r"\bdoesn't follow\b",
+    r"\bnon sequitur\b",
+    # cheaper / simpler path exists
     r"\bcould be solved by\b",
     r"\beasily resolved\b",
+    r"\bcheaper alternative\b",
+    r"\bsimpler solution\b",
+    # the fix already exists (whoops)
     r"\balready exists\b",
     r"\btechnology exists\b",
     r"\bupgrade.{0,20}possible\b",
-    r"\bcheaper alternative\b",
-    r"\bsimpler solution\b",
+    # logical inconsistency
     r"\bmismatch between\b",
     r"\bcontradicts\b",
     r"\binconsistent with\b",
-    r"\bdoesn't follow\b",
-    r"\bnon sequitur\b",
 ]
 
-# ---------------------------------------------------------------------------
-# Layer 3 -- Incentive / Beneficiary markers
-# ---------------------------------------------------------------------------
+# [LAYER 3] INCENTIVE MAPPING
+# Follow the scent trail. Who profits from the stated "solution"?
 INCENTIVE_MARKERS = [
+    # direct benefit
     r"\bprofits from\b",
     r"\bbenefits from\b",
+    r"\bfinancial interest\b",
+    r"\bvested interest\b",
+    r"\bself-dealing\b",
+    # institutional plumbing
     r"\blobby\b",
     r"\bcontract(s|or|ors)?\b",
     r"\bsubsid(y|ies|ize)\b",
-    r"\bmonopol(y|ies|istic)\b",
     r"\brevolving door\b",
     r"\bconflict of interest\b",
-    r"\bfinancial interest\b",
-    r"\bshareholder(s)?\b",
+    # market structure
+    r"\bmonopol(y|ies|istic)\b",
     r"\bincumbent(s)?\b",
     r"\bstatus quo\b",
-    r"\bvested interest\b",
-    r"\bself-dealing\b",
+    # funding trails
+    r"\bshareholder(s)?\b",
     r"\bsponsor(ed|ship)?\b",
     r"\bdonor(s)?\b",
     r"\bfunding from\b",
 ]
 
-# ---------------------------------------------------------------------------
-# Layer 4 -- Systemic Alignment / Performative action markers
-# ---------------------------------------------------------------------------
+# [LAYER 4] SYSTEMIC ALIGNMENT
+# Is the system measuring outcomes, or just measuring activity?
 SYSTEMIC_ALIGNMENT_MARKERS = [
+    # metrics & measurement theater
     r"\bbudget(s|ary)?\b",
     r"\bspending\b",
     r"\bmetric(s)?\b",
     r"\bKPI\b",
+    r"\bmeasured (by|on) (spending|output|volume)\b",
+    # bureaucratic machinery
     r"\bcompliance\b",
     r"\bregulat(or|ory|ion)\b",
     r"\bbureaucra(cy|tic)\b",
+    r"\bpaper trail\b",
+    # performance over substance
     r"\bperformative\b",
     r"\boptics\b",
     r"\bappearance of\b",
     r"\bsignaling\b",
     r"\bcheck.the.box\b",
-    r"\bpaper trail\b",
     r"\breward(s|ed)? (inaction|delay|stagnation)\b",
-    r"\bmeasured (by|on) (spending|output|volume)\b",
 ]
 
+# Subset: solutions designed to look busy without solving anything
 PERFORMATIVE_SOLUTION_MARKERS = [
     r"\btask force\b",
     r"\bcommittee\b",
@@ -114,22 +177,24 @@ PERFORMATIVE_SOLUTION_MARKERS = [
     r"\bpilot program\b.*\b(no|without) (timeline|deadline)\b",
 ]
 
-# ---------------------------------------------------------------------------
-# Layer 5 -- Consequence Analysis markers
-# ---------------------------------------------------------------------------
+# [LAYER 5] CONSEQUENCE ANALYSIS
+# What actually happened? Usually the opposite of what was promised.
 NEGATIVE_CONSEQUENCE_MARKERS = [
+    # delays & stagnation
     r"\bdelay(s|ed)?\b",
     r"\bsetback\b",
-    r"\bincreased dependenc(y|e)\b",
-    r"\bworsened?\b",
+    r"\bno (progress|improvement|change)\b",
     r"\bunresolved\b",
     r"\bpersist(s|ed|ent)?\b",
+    # things got worse
+    r"\bincreased dependenc(y|e)\b",
+    r"\bworsened?\b",
     r"\bstill (vulnerable|broken|outdated|obsolete)\b",
-    r"\bno (progress|improvement|change)\b",
-    r"\bunintended consequence\b",
     r"\bbackfired?\b",
-    r"\bcollateral damage\b",
     r"\bopposite effect\b",
+    # root cause untouched (chef's kiss of performative action)
+    r"\bunintended consequence\b",
+    r"\bcollateral damage\b",
     r"\broot cause.{0,15}untouched\b",
 ]
 
@@ -140,247 +205,272 @@ POSITIVE_OUTCOME_MARKERS = [
     r"\btransparent (result|outcome)\b",
 ]
 
-# ---------------------------------------------------------------------------
-# Layer 6 -- Hidden Driver / Structural motive markers
-# ---------------------------------------------------------------------------
+# [LAYER 6] HIDDEN DRIVER
+# The real reason. The thing at the bottom of the burrow.
 HIDDEN_DRIVER_MARKERS = [
+    # explicit callouts
     r"\bfollow the money\b",
     r"\breal reason\b",
     r"\bactual motive\b",
     r"\bhidden agenda\b",
     r"\bstructural incentive\b",
+    # power mechanics
     r"\bpower consolidat(ion|e)\b",
     r"\bcontrol (of|over)\b",
+    r"\bmaintain(ing)? (dominance|control|monopoly)\b",
+    # extraction patterns
     r"\bdependency (creation|maintenance|pyramid)\b",
     r"\brent[- ]seek(ing)?\b",
     r"\bcaptur(e|ed)\b",
     r"\bgate(keep|keeper|keeping)\b",
     r"\bartificial scarcity\b",
-    r"\bmaintain(ing)? (dominance|control|monopoly)\b",
 ]
 
-# ---------------------------------------------------------------------------
-# Layer 7 -- Peripheral Signal markers
-# ---------------------------------------------------------------------------
+# [LAYER 7] PERIPHERAL SIGNALS
+# The canaries. People outside the core who see the mismatch --
+# engineers, veterans, auditors, locals. They notice the system
+# *could* solve it but chooses not to.
 PERIPHERAL_SIGNAL_MARKERS = [
+    # domain experts speaking up
     r"\bengineers (say|note|point out|warn)\b",
     r"\bveterans (say|note|report|observe)\b",
-    r"\blocal (communities|residents|officials)\b",
     r"\bauditor(s)?\b",
+    # community-level observation
+    r"\blocal (communities|residents|officials)\b",
+    r"\bon the ground\b",
+    r"\bfrontline\b",
+    r"\brank and file\b",
+    # leak / insider contradiction
     r"\bwhistleblow(er|ers|ing)\b",
     r"\binsider(s)?\b",
     r"\bleaked?\b",
     r"\binternal (report|memo|document|email)\b",
+    # independent verification
     r"\bindependent (analysis|review|audit|report)\b",
     r"\bcontradicts? (the )?(official|stated)\b",
     r"\bin practice\b.*\bdifferent\b",
-    r"\bon the ground\b",
-    r"\bfrontline\b",
-    r"\brank and file\b",
 ]
 
-# ---------------------------------------------------------------------------
-# Layer 8 -- Feedback Loop / Self-reinforcing cycle markers
-# ---------------------------------------------------------------------------
+# [LAYER 8] FEEDBACK LOOPS
+# The burrow that digs itself deeper. Deviation is punished.
+# The loop keeps running until collapse or external bypass.
 FEEDBACK_LOOP_MARKERS = [
+    # cycle language
     r"\bcycle\b",
     r"\bself[- ]reinforcing\b",
     r"\bvicious (circle|cycle)\b",
     r"\bfeedback loop\b",
+    r"\bpath dependenc(y|e)\b",
+    # entrenchment
     r"\bperpetuate(s|d)?\b",
     r"\bentrenched?\b",
     r"\block[- ]?in\b",
-    r"\bpath dependenc(y|e)\b",
+    r"\bnormalize(s|d)?\b",
+    # suppression of alternatives
     r"\bsuppressed?\b",
     r"\bsilenced?\b",
     r"\bmarginalized?\b",
     r"\bco[- ]?opt(ed|ion)?\b",
     r"\babsorbed? (by|into) (the )?(system|establishment)\b",
-    r"\bnormalize(s|d)?\b",
+    # reward/punish asymmetry
     r"\breward(s|ed)? compliance\b",
     r"\bpunish(es|ed)? (dissent|deviation)\b",
 ]
 
-# ---------------------------------------------------------------------------
-# Logic Fallacy cross-references (commonly found in camouflage narratives)
-# ---------------------------------------------------------------------------
+
+# ============================================================
+# CAMOUFLAGE FALLACIES
+# ============================================================
+# Logic fallacies that show up when someone's dressing a bad
+# reason in a nice suit. The ferret's war dance -- approach
+# from angles the narrative didn't plan for.
+
 CAMOUFLAGE_FALLACIES = {
-    "Red Herring": r"\b(but what about|the real issue is|let's focus on)\b",
-    "False Cause": r"\b(caused by|responsible for|led to)\b.*\b(wind|solar|renewables|immigrants|outsiders)\b",
+    "Red Herring":       r"\b(but what about|the real issue is|let's focus on)\b",
+    "False Cause":       r"\b(caused by|responsible for|led to)\b.*\b(wind|solar|renewables|immigrants|outsiders)\b",
     "Appeal to Authority": r"\b(experts agree|officials confirm|the government says|science says)\b",
-    "Special Pleading": r"\b(exception|special case|unique circumstance|this is different)\b",
+    "Special Pleading":  r"\b(exception|special case|unique circumstance|this is different)\b",
     "Circular Reasoning": r"\b(because (it|that) is (the|how)|it just is|that's how it works)\b",
-    "Status Quo Bias": r"\b(always been|tradition|the way (things|it) (works?|has been))\b",
-    "Moral Licensing": r"\b(we already (did|gave)|we've done enough|we contributed)\b",
+    "Status Quo Bias":   r"\b(always been|tradition|the way (things|it) (works?|has been))\b",
+    "Moral Licensing":   r"\b(we already (did|gave)|we've done enough|we contributed)\b",
     "Survivorship Bias": r"\b(the ones who succeeded|successful examples show|look at those who made it)\b",
 }
 
 
-# ===================================================================
-# DIAGNOSTIC LAYERS
-# ===================================================================
+# ============================================================
+# SCORING CONFIG
+# ============================================================
+# Weights: how much each layer contributes to the camouflage
+# score. Higher weight = stronger signal that something stinks.
 
-def _count_pattern_hits(text: str, patterns: list) -> int:
-    lower = text.lower()
+LAYER_WEIGHTS = {
+    "Stated Problem":      0.8,  # baseline -- you need a story to hide behind
+    "Feasibility Gap":     1.5,  # the fix doesn't fix? the ferret fits through
+    "Incentive Mapping":   1.4,  # scent trail leads to someone's wallet
+    "Systemic Alignment":  1.3,  # the system rewards theater, not results
+    "Consequence Analysis": 1.6, # promised X, delivered the opposite of X
+    "Hidden Driver":       1.2,  # what's at the bottom of the burrow
+    "Peripheral Signals":  1.1,  # the canaries in the coal mine
+    "Feedback Loops":      1.5,  # the burrow that digs itself deeper
+}
+
+# Signal thresholds -> numeric score
+SIGNAL_SCORES = {"strong": 1.0, "moderate": 0.5, "weak": 0.0}
+
+# Per-layer hit thresholds: (strong, moderate)
+LAYER_THRESHOLDS = {
+    "Stated Problem":       (3, 1),
+    "Feasibility Gap":      (3, 1),
+    "Incentive Mapping":    (4, 2),
+    "Systemic Alignment":   (4, 2),
+    "Consequence Analysis": (3, 1),  # uses divergence, not raw hits
+    "Hidden Driver":        (3, 1),
+    "Peripheral Signals":   (3, 1),
+    "Feedback Loops":       (3, 1),
+}
+
+
+# ============================================================
+# INTERNALS
+# ============================================================
+
+def _count_hits(text: str, patterns: list) -> int:
+    """Count total regex matches across all patterns."""
     total = 0
-    for pattern in patterns:
-        total += len(re.findall(pattern, lower, re.IGNORECASE))
+    for p in patterns:
+        total += len(re.findall(p, text, re.IGNORECASE))
     return total
 
 
 def _collect_matches(text: str, patterns: list) -> List[str]:
-    """Return the actual matched substrings for transparency."""
-    lower = text.lower()
+    """Return matched substrings. Receipts, not claims."""
     found = []
-    for pattern in patterns:
-        for m in re.finditer(pattern, lower, re.IGNORECASE):
+    for p in patterns:
+        for m in re.finditer(p, text, re.IGNORECASE):
             found.append(m.group(0))
     return found
 
 
+def _classify(value: int, layer_name: str) -> str:
+    """Classify a hit count into strong / moderate / weak."""
+    strong, moderate = LAYER_THRESHOLDS[layer_name]
+    if value >= strong:
+        return "strong"
+    if value >= moderate:
+        return "moderate"
+    return "weak"
+
+
+# ============================================================
+# LAYER FUNCTIONS
+# ============================================================
+# Each returns: {layer, hits, matches, signal, ...extras}
+# The ferret tunnels through each one in sequence.
+
 def layer_1_stated_problem(text: str) -> dict:
-    """Identify the stated problem / official narrative."""
-    hits = _count_pattern_hits(text, STATED_PROBLEM_MARKERS)
-    matches = _collect_matches(text, STATED_PROBLEM_MARKERS)
+    """What's the official story?"""
+    hits = _count_hits(text, STATED_PROBLEM_MARKERS)
     return {
         "layer": "Stated Problem",
         "hits": hits,
-        "matches": matches,
-        "signal": "strong" if hits >= 3 else "moderate" if hits >= 1 else "weak",
+        "matches": _collect_matches(text, STATED_PROBLEM_MARKERS),
+        "signal": _classify(hits, "Stated Problem"),
     }
 
 
 def layer_2_feasibility(text: str) -> dict:
-    """Check if the stated solution actually solves the stated problem."""
-    hits = _count_pattern_hits(text, FEASIBILITY_GAP_MARKERS)
-    matches = _collect_matches(text, FEASIBILITY_GAP_MARKERS)
+    """Does the fix actually fix? The ferret's spine test -- if it bends through, the gap is real."""
+    hits = _count_hits(text, FEASIBILITY_GAP_MARKERS)
     return {
         "layer": "Feasibility Gap",
         "hits": hits,
-        "matches": matches,
-        "signal": "strong" if hits >= 3 else "moderate" if hits >= 1 else "weak",
+        "matches": _collect_matches(text, FEASIBILITY_GAP_MARKERS),
+        "signal": _classify(hits, "Feasibility Gap"),
     }
 
 
 def layer_3_incentives(text: str) -> dict:
-    """Map who benefits if the stated problem persists."""
-    hits = _count_pattern_hits(text, INCENTIVE_MARKERS)
-    matches = _collect_matches(text, INCENTIVE_MARKERS)
+    """Follow the scent. Who gets paid when nothing changes?"""
+    hits = _count_hits(text, INCENTIVE_MARKERS)
     return {
         "layer": "Incentive Mapping",
         "hits": hits,
-        "matches": matches,
-        "signal": "strong" if hits >= 4 else "moderate" if hits >= 2 else "weak",
+        "matches": _collect_matches(text, INCENTIVE_MARKERS),
+        "signal": _classify(hits, "Incentive Mapping"),
     }
 
 
 def layer_4_systemic_alignment(text: str) -> dict:
-    """Check whether the system rewards solving the problem or performing."""
-    structural = _count_pattern_hits(text, SYSTEMIC_ALIGNMENT_MARKERS)
-    performative = _count_pattern_hits(text, PERFORMATIVE_SOLUTION_MARKERS)
-    matches = (
-        _collect_matches(text, SYSTEMIC_ALIGNMENT_MARKERS)
-        + _collect_matches(text, PERFORMATIVE_SOLUTION_MARKERS)
-    )
+    """Is the system rewarding solutions or rewarding stalling?"""
+    structural = _count_hits(text, SYSTEMIC_ALIGNMENT_MARKERS)
+    performative = _count_hits(text, PERFORMATIVE_SOLUTION_MARKERS)
     combined = structural + performative
     return {
         "layer": "Systemic Alignment",
+        "hits": combined,
         "structural_hits": structural,
         "performative_hits": performative,
-        "hits": combined,
-        "matches": matches,
-        "signal": "strong" if combined >= 4 else "moderate" if combined >= 2 else "weak",
+        "matches": (
+            _collect_matches(text, SYSTEMIC_ALIGNMENT_MARKERS)
+            + _collect_matches(text, PERFORMATIVE_SOLUTION_MARKERS)
+        ),
+        "signal": _classify(combined, "Systemic Alignment"),
     }
 
 
 def layer_5_consequences(text: str) -> dict:
-    """Analyze actual consequences vs. promised outcomes."""
-    negative = _count_pattern_hits(text, NEGATIVE_CONSEQUENCE_MARKERS)
-    positive = _count_pattern_hits(text, POSITIVE_OUTCOME_MARKERS)
-    matches = (
-        _collect_matches(text, NEGATIVE_CONSEQUENCE_MARKERS)
-        + _collect_matches(text, POSITIVE_OUTCOME_MARKERS)
-    )
+    """What actually happened vs. what was promised?"""
+    negative = _count_hits(text, NEGATIVE_CONSEQUENCE_MARKERS)
+    positive = _count_hits(text, POSITIVE_OUTCOME_MARKERS)
     divergence = negative - positive
     return {
         "layer": "Consequence Analysis",
+        "hits": negative + positive,
         "negative_hits": negative,
         "positive_hits": positive,
         "divergence": divergence,
-        "hits": negative + positive,
-        "matches": matches,
-        "signal": "strong" if divergence >= 3 else "moderate" if divergence >= 1 else "weak",
+        "matches": (
+            _collect_matches(text, NEGATIVE_CONSEQUENCE_MARKERS)
+            + _collect_matches(text, POSITIVE_OUTCOME_MARKERS)
+        ),
+        "signal": _classify(divergence, "Consequence Analysis"),
     }
 
 
 def layer_6_hidden_driver(text: str) -> dict:
-    """Surface hidden structural motives."""
-    hits = _count_pattern_hits(text, HIDDEN_DRIVER_MARKERS)
-    matches = _collect_matches(text, HIDDEN_DRIVER_MARKERS)
+    """What's at the bottom of the burrow?"""
+    hits = _count_hits(text, HIDDEN_DRIVER_MARKERS)
     return {
         "layer": "Hidden Driver",
         "hits": hits,
-        "matches": matches,
-        "signal": "strong" if hits >= 3 else "moderate" if hits >= 1 else "weak",
+        "matches": _collect_matches(text, HIDDEN_DRIVER_MARKERS),
+        "signal": _classify(hits, "Hidden Driver"),
     }
 
 
 def layer_7_peripheral_signals(text: str) -> dict:
-    """Detect outside observations that contradict the official narrative."""
-    hits = _count_pattern_hits(text, PERIPHERAL_SIGNAL_MARKERS)
-    matches = _collect_matches(text, PERIPHERAL_SIGNAL_MARKERS)
+    """The canaries. People outside the bubble who see the mismatch."""
+    hits = _count_hits(text, PERIPHERAL_SIGNAL_MARKERS)
     return {
         "layer": "Peripheral Signals",
         "hits": hits,
-        "matches": matches,
-        "signal": "strong" if hits >= 3 else "moderate" if hits >= 1 else "weak",
+        "matches": _collect_matches(text, PERIPHERAL_SIGNAL_MARKERS),
+        "signal": _classify(hits, "Peripheral Signals"),
     }
 
 
 def layer_8_feedback_loops(text: str) -> dict:
-    """Detect self-reinforcing cycles that maintain the status quo."""
-    hits = _count_pattern_hits(text, FEEDBACK_LOOP_MARKERS)
-    matches = _collect_matches(text, FEEDBACK_LOOP_MARKERS)
+    """The burrow that digs itself deeper."""
+    hits = _count_hits(text, FEEDBACK_LOOP_MARKERS)
     return {
         "layer": "Feedback Loops",
         "hits": hits,
-        "matches": matches,
-        "signal": "strong" if hits >= 3 else "moderate" if hits >= 1 else "weak",
+        "matches": _collect_matches(text, FEEDBACK_LOOP_MARKERS),
+        "signal": _classify(hits, "Feedback Loops"),
     }
 
 
-# ===================================================================
-# FALLACY CROSS-REFERENCE
-# ===================================================================
-
-def detect_camouflage_fallacies(text: str) -> Dict[str, int]:
-    """Detect logic fallacies commonly used to camouflage real drivers."""
-    results = {}
-    lower = text.lower()
-    for name, pattern in CAMOUFLAGE_FALLACIES.items():
-        count = len(re.findall(pattern, lower, re.IGNORECASE))
-        if count > 0:
-            results[name] = count
-    return results
-
-
-# ===================================================================
-# COMPOSITE DIAGNOSIS
-# ===================================================================
-
-# Weights reflect how much each layer contributes to the overall
-# "camouflage score" -- i.e. how likely the stated reason is a cover.
-LAYER_WEIGHTS = {
-    "Stated Problem": 0.8,       # Presence of a stated narrative (baseline)
-    "Feasibility Gap": 1.5,      # Gap between claim and reality
-    "Incentive Mapping": 1.4,    # Clear beneficiaries
-    "Systemic Alignment": 1.3,   # System rewards performance over fixing
-    "Consequence Analysis": 1.6, # Actual outcome diverges from promise
-    "Hidden Driver": 1.2,        # Explicit hidden-motive language
-    "Peripheral Signals": 1.1,   # Outsiders noticing the mismatch
-    "Feedback Loops": 1.5,       # Self-reinforcing stagnation
-}
-
+# Pipeline order -- the ferret's path through the burrow
 ALL_LAYERS = [
     layer_1_stated_problem,
     layer_2_feasibility,
@@ -392,79 +482,98 @@ ALL_LAYERS = [
     layer_8_feedback_loops,
 ]
 
-SIGNAL_SCORES = {"strong": 1.0, "moderate": 0.5, "weak": 0.0}
+
+# ============================================================
+# FALLACY CROSS-REFERENCE
+# ============================================================
+
+def detect_camouflage_fallacies(text: str) -> Dict[str, int]:
+    """War dance: hit the narrative from angles it didn't plan for."""
+    hits = {}
+    for name, pattern in CAMOUFLAGE_FALLACIES.items():
+        count = len(re.findall(pattern, text, re.IGNORECASE))
+        if count:
+            hits[name] = count
+    return hits
+
+
+# ============================================================
+# COMPOSITE DIAGNOSIS
+# ============================================================
+
+# Verdicts -- what the ferret found
+VERDICTS = [
+    (0.70, "HIGH CAMOUFLAGE -- the stated reason is wearing a fake mustache. The ferret is not fooled."),
+    (0.45, "MODERATE CAMOUFLAGE -- narrative and reality aren't on speaking terms. Something's in the burrow."),
+    (0.20, "LOW CAMOUFLAGE -- a few cracks in the story. The ferret sniffed but didn't dig deep."),
+    (0.00, "MINIMAL CAMOUFLAGE -- stated reasons check out. The ferret yawned and moved on."),
+]
 
 
 def diagnose(text: str) -> dict:
     """
-    Run the full 8-layer conflict diagnosis on *text*.
+    Full 8-layer conflict diagnosis.
 
-    Returns a dict with:
-      - layers: list of per-layer results
-      - fallacies: camouflage fallacies detected
-      - camouflage_score: 0.0-1.0 composite (higher = more likely camouflage)
-      - verdict: human-readable assessment
+    The ferret enters the burrow at Layer 1 and tunnels through
+    all 8 layers, collecting evidence (matches) and classifying
+    signal strength at each stage.
+
+    Returns:
+        layers:           list of per-layer result dicts
+        fallacies:        {fallacy_name: count}
+        camouflage_score: float 0.0-1.0 (higher = more camouflage)
+        verdict:          human-readable assessment
     """
     layers = [fn(text) for fn in ALL_LAYERS]
     fallacies = detect_camouflage_fallacies(text)
 
-    # Weighted composite
-    weighted_sum = 0.0
-    max_possible = 0.0
-    for result in layers:
-        w = LAYER_WEIGHTS[result["layer"]]
-        weighted_sum += SIGNAL_SCORES[result["signal"]] * w
-        max_possible += w
+    # weighted composite from layer signals
+    weighted_sum = sum(
+        SIGNAL_SCORES[lr["signal"]] * LAYER_WEIGHTS[lr["layer"]]
+        for lr in layers
+    )
+    max_possible = sum(LAYER_WEIGHTS.values())
+    score = weighted_sum / max_possible if max_possible else 0.0
 
-    camouflage_score = weighted_sum / max_possible if max_possible else 0.0
+    # fallacy bonus (capped at +0.15) -- war dance findings
+    score = min(score + min(sum(fallacies.values()) * 0.03, 0.15), 1.0)
 
-    # Boost slightly for detected fallacies (cap at 0.15 bonus)
-    fallacy_boost = min(sum(fallacies.values()) * 0.03, 0.15)
-    camouflage_score = min(camouflage_score + fallacy_boost, 1.0)
-
-    # Verdict
-    if camouflage_score >= 0.70:
-        verdict = "HIGH CAMOUFLAGE -- stated reason is very likely a cover"
-    elif camouflage_score >= 0.45:
-        verdict = "MODERATE CAMOUFLAGE -- significant gaps between narrative and reality"
-    elif camouflage_score >= 0.20:
-        verdict = "LOW CAMOUFLAGE -- some misalignment detected, but narrative mostly holds"
-    else:
-        verdict = "MINIMAL CAMOUFLAGE -- stated reasons appear consistent with evidence"
+    verdict = next(v for threshold, v in VERDICTS if score >= threshold)
 
     return {
         "layers": layers,
         "fallacies": fallacies,
-        "camouflage_score": round(camouflage_score, 3),
+        "camouflage_score": round(score, 3),
         "verdict": verdict,
     }
 
 
-# ===================================================================
-# SENSOR-COMPATIBLE INTERFACE (assess)
-# ===================================================================
+# ============================================================
+# SENSOR SUITE INTERFACE
+# ============================================================
+# Drop-in with every other Logic-Ferret sensor.
+# assess(text) -> (score, flags)
 
 def assess(text: str) -> Tuple[float, Dict[str, str]]:
     """
-    Standard sensor interface for the Logic-Ferret sensor suite.
+    Sensor-suite-compatible interface.
 
     Returns:
-      - score: float 0.0-1.0 (camouflage score; higher = more camouflage)
-      - flags: dict with per-layer signals and overall verdict
+        score: float 0.0-1.0 (higher = more camouflage detected)
+        flags: per-layer signals, fallacy summary, verdict
     """
     result = diagnose(text)
     flags = {}
 
-    for layer in result["layers"]:
-        name = layer["layer"]
-        flags[f"{name} Signal"] = layer["signal"]
-        flags[f"{name} Hits"] = str(layer["hits"])
+    for lr in result["layers"]:
+        name = lr["layer"]
+        flags[f"{name} Signal"] = lr["signal"]
+        flags[f"{name} Hits"] = str(lr["hits"])
 
     if result["fallacies"]:
-        fallacy_summary = ", ".join(
+        flags["Camouflage Fallacies"] = ", ".join(
             f"{k}({v})" for k, v in result["fallacies"].items()
         )
-        flags["Camouflage Fallacies"] = fallacy_summary
 
     flags["Camouflage Score"] = f"{result['camouflage_score']:.3f}"
     flags["Verdict"] = result["verdict"]
@@ -472,99 +581,103 @@ def assess(text: str) -> Tuple[float, Dict[str, str]]:
     return result["camouflage_score"], flags
 
 
-# ===================================================================
-# DIAGNOSTIC TABLE (pretty-print)
-# ===================================================================
+# ============================================================
+# OUTPUT: DIAGNOSTIC TABLE
+# ============================================================
+
+def _signal_icon(sig: str) -> str:
+    """Ferret behavior state for each signal level."""
+    return {
+        "strong": "DIG",   # ferret is digging -- found something
+        "moderate": "snf",  # sniffing -- something's there
+        "weak": "zzz",     # napping -- nothing interesting
+    }.get(sig, " ? ")
+
 
 def print_diagnosis_table(text: str) -> None:
     """
-    Print the full diagnostic table for a piece of text.
-
-    Columns: Layer | Signal | Hits | Key Matches | Fallacies / Notes
+    Formatted diagnostic table.
+    Columns: Layer | Ferret | Hits | Evidence
     """
     result = diagnose(text)
 
     print()
-    print("=" * 90)
-    print("  CONFLICT DIAGNOSIS TABLE")
-    print("=" * 90)
+    print("=" * 88)
+    print("   CONFLICT DIAGNOSIS TABLE")
+    print("   \"The problem is never what it claims to be.\"")
+    print("=" * 88)
+    print(f" {'Layer':<24}{'Ferret':<8}{'Hits':>5}   {'Evidence (stashed receipts)'}")
+    print("-" * 88)
 
-    header = f"{'Layer':<24} {'Signal':<10} {'Hits':>5}  {'Key Matches'}"
-    print(header)
-    print("-" * 90)
+    for lr in result["layers"]:
+        icon = _signal_icon(lr["signal"])
+        top = lr["matches"][:4]
+        evidence = "; ".join(top) if top else "-- (nothing to stash)"
+        if len(evidence) > 42:
+            evidence = evidence[:39] + "..."
+        print(f" {lr['layer']:<24}[{icon}] {lr['hits']:>5}   {evidence}")
 
-    for layer in result["layers"]:
-        name = layer["layer"]
-        signal = layer["signal"].upper()
-        hits = layer["hits"]
-        top_matches = layer["matches"][:5]
-        match_str = "; ".join(top_matches) if top_matches else "--"
-        if len(match_str) > 45:
-            match_str = match_str[:42] + "..."
-        print(f"{name:<24} {signal:<10} {hits:>5}  {match_str}")
-
-    print("-" * 90)
+    print("-" * 88)
 
     if result["fallacies"]:
-        print(f"\n  Camouflage Fallacies Detected:")
+        print()
+        print("   War Dance Findings (narrative fallacies):")
         for name, count in result["fallacies"].items():
-            print(f"    {name}: {count}")
+            print(f"     {name}: {count}")
 
-    print(f"\n  Camouflage Score: {result['camouflage_score']:.3f}")
-    print(f"  Verdict: {result['verdict']}")
-    print("=" * 90)
+    print()
+    print(f"   Camouflage Score: {result['camouflage_score']:.3f}")
+    print(f"   {result['verdict']}")
+    print("=" * 88)
+    print()
 
 
-# ===================================================================
-# FLOWCHART TRACE (step-by-step pipeline output)
-# ===================================================================
+# ============================================================
+# OUTPUT: FLOWCHART TRACE
+# ============================================================
+# The ferret's path through the burrow, layer by layer.
+# Stated problem -> does the fix work? -> who benefits?
+# -> system alignment -> actual consequences -> hidden driver
+# -> feedback loops -> peripheral signals -> (recurse)
+
+FLOWCHART_STEPS = [
+    ("Stated Problem / Threat",           "Stated Problem"),
+    ("Official Solution -- does it fix?",  "Feasibility Gap"),
+    ("Actual Consequences",                "Consequence Analysis"),
+    ("Who Benefits? (scent trail)",        "Incentive Mapping"),
+    ("System Rewards What?",               "Systemic Alignment"),
+    ("Hidden Driver (bottom of burrow)",   "Hidden Driver"),
+    ("Feedback Loop (self-digging)",       "Feedback Loops"),
+    ("Peripheral Signals (canaries)",      "Peripheral Signals"),
+]
+
 
 def print_flowchart(text: str) -> None:
-    """
-    Walk through the diagnostic pipeline step by step, printing
-    the flowchart from the framework:
-
-      Stated Problem -> Official Solution -> Immediate Outcome ->
-      Observed Consequence -> Systemic Incentives -> Feedback Loop ->
-      Peripheral Awareness -> Loop Re-enters Core -> (Recurse)
-    """
+    """The ferret's tunnel path, step by step."""
     result = diagnose(text)
-    layers = {lr["layer"]: lr for lr in result["layers"]}
-
-    def _signal_icon(sig):
-        return {"strong": "[!!!]", "moderate": "[..]", "weak": "[  ]"}.get(sig, "[??]")
-
-    steps = [
-        ("Stated Problem / Threat",         layers["Stated Problem"]),
-        ("Official Solution (feasible?)",    layers["Feasibility Gap"]),
-        ("Immediate Outcome (consequences)", layers["Consequence Analysis"]),
-        ("Systemic Incentives / Core Benefit", layers["Incentive Mapping"]),
-        ("Systemic Alignment / Metrics",     layers["Systemic Alignment"]),
-        ("Hidden Driver / Root Incentive",   layers["Hidden Driver"]),
-        ("Feedback Loop / Self-reinforcing", layers["Feedback Loops"]),
-        ("Peripheral Awareness / Bypass",    layers["Peripheral Signals"]),
-    ]
+    by_name = {lr["layer"]: lr for lr in result["layers"]}
 
     print()
-    print("  CONFLICT DIAGNOSIS FLOWCHART")
+    print("   CONFLICT DIAGNOSIS FLOWCHART")
+    print("   (the ferret enters the burrow)")
     print()
 
-    for i, (label, data) in enumerate(steps):
+    for i, (label, layer_key) in enumerate(FLOWCHART_STEPS):
+        data = by_name[layer_key]
         icon = _signal_icon(data["signal"])
-        print(f"  {icon} {label}")
-        if data["matches"]:
-            top = data["matches"][:3]
-            for m in top:
-                print(f"        > {m}")
-        if i < len(steps) - 1:
-            print("        |")
-            print("        v")
+        print(f"  [{icon}] {label}")
+        for m in data["matches"][:3]:
+            print(f"          > {m}")
+        if i < len(FLOWCHART_STEPS) - 1:
+            print("          |")
+            print("          v")
 
-    print("        |")
-    print("        v")
-    print("  [Loop re-enters core -- recursion continues until")
-    print("   collapse, bypass scaling, or camouflaged stagnation persists]")
+    print("          |")
+    print("          v")
+    print("   [Loop re-enters core]")
+    print("   The burrow circles back. Recursion continues until")
+    print("   collapse, bypass, or camouflaged stagnation becomes normal.")
     print()
-    print(f"  CAMOUFLAGE SCORE: {result['camouflage_score']:.3f}")
-    print(f"  VERDICT: {result['verdict']}")
+    print(f"   CAMOUFLAGE SCORE: {result['camouflage_score']:.3f}")
+    print(f"   {result['verdict']}")
     print()
