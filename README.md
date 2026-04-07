@@ -59,6 +59,19 @@ if __name__ == "__main__":
     main()
 
 
+Sibling Framework
+
+[Thermodynamic Accountability Framework (TAF)](https://github.com/JinnZ2/thermodynamic-accountability-framework) — measures institutional failure through physics. Logic Ferret measures it through rhetoric. TAF asks "does the energy math close?" while the Ferret asks "is the narrative camouflage?" Run both and the bullshit has nowhere left to hide.
+
+| TAF Module | Logic Ferret Sensor | Shared Diagnostic |
+|---|---|---|
+| Narrative Stripper | Stated Problem + Feasibility Gap | Strip the story, check if it holds |
+| Social Overhead Accountant | Systemic Alignment | Performance theater vs. actual outcomes |
+| Root Cause Depth Analyzer | Hidden Driver + Consequences | Trace past symptoms to structure |
+| Friction Ratio | Camouflage Score | Single number: how much is waste/cover? |
+| Energy Conservation | Consequence divergence | Promised output vs. actual output |
+| Entropy growth | Feedback Loops | Self-reinforcing decay the system won't fix |
+
 Author
 
 Logic Ferret GUI™
