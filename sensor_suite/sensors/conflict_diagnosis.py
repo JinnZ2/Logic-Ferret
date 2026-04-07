@@ -56,6 +56,25 @@
 #   diagnose(text)            -> full structured dict
 #   print_diagnosis_table()   -> formatted table
 #   print_flowchart()         -> step-by-step pipeline trace
+#
+# SIBLING FRAMEWORK:
+#   Thermodynamic Accountability Framework (TAF)
+#   https://github.com/JinnZ2/thermodynamic-accountability-framework
+#
+#   TAF and this sensor are complementary diagnostic lenses:
+#     - TAF measures from PHYSICS: does the energy math close?
+#     - This sensor measures from RHETORIC: is the narrative camouflage?
+#
+#   Cross-reference map:
+#     TAF Narrative Stripper        <-> Stated Problem + Feasibility Gap
+#     TAF Social Overhead Accountant <-> Systemic Alignment (performative action)
+#     TAF Root Cause Depth Analyzer  <-> Hidden Driver + Consequence Analysis
+#     TAF Friction Ratio             <-> Camouflage Score
+#     TAF Energy Conservation        <-> Consequence divergence (output != promise)
+#     TAF Entropy / waste growth     <-> Feedback Loops (self-reinforcing decay)
+#
+#   The ferret sniffs the rhetoric. TAF weighs the physics.
+#   Run both and the camouflage has nowhere left to hide.
 
 import re
 from typing import Tuple, Dict, List
