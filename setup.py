@@ -13,7 +13,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "logic-ferret=gui.fallacy_gui:main"
+            "logic-ferret=fallacy_gui:main"
         ]
     },
     include_package_data=True,

@@ -25,6 +25,9 @@ def assess(text: str) -> Tuple[float, Dict[str, int]]:
             flags[label] = count
             total_hits += count
 
-    score = max(0.0, 1.0 - min(total_hits / 5.0, 1.0))  # 1.0 = low gaslight, 0.0 = high
+    # higher = more gaslighting detected (consistent with all other sensors)
+    score = min(total_hits / 5.0, 1.0)
+
+    flags["Gaslight Score"] = f"{score:.2f}"
 
     return score, flags
