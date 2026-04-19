@@ -148,6 +148,47 @@ CALCULATE_C3: Callable[[Dict[str, float]], Tuple[float, Dict[str, float]]] = (
 
 
 # ------------------------------------------------------------
+# Signatures
+# ------------------------------------------------------------
+# Stringified type signatures of every callable on the surface.
+# Treated as part of the contract: any change here must bump
+# SCHEMA_VERSION. Consumers can pin via assert_signatures().
+# ------------------------------------------------------------
+
+SIGNATURES: Dict[str, str] = {
+    "assess": "(text: str) -> (float, Dict[str, Any])",
+    "diagnose": "(text: str) -> {layers, fallacies, camouflage_score, verdict}",
+    "annotate_text": "(text: str) -> (str, Dict[str, int])",
+    "calculate_c3": "(Dict[str, float]) -> (float, Dict[str, float])",
+}
+
+
+class SignatureMismatch(Exception):
+    """Raised when a consumer's pinned signatures don't match this contract."""
+
+
+def assert_signatures(expected: Dict[str, str]) -> None:
+    """
+    Fail loud if the consumer's pinned signatures have drifted from ours.
+
+    TAF's ferret_fieldlink.py keeps its own SIGNATURES copy and calls this
+    on import. Any drift -> SignatureMismatch, naming every offending key.
+    """
+    diffs = []
+    for key, want in expected.items():
+        got = SIGNATURES.get(key)
+        if got is None:
+            diffs.append(f"{key}: missing from contract (expected {want!r})")
+        elif got != want:
+            diffs.append(f"{key}: expected {want!r}, contract has {got!r}")
+    if diffs:
+        raise SignatureMismatch(
+            f"Logic-Ferret schema {SCHEMA_VERSION} signature drift:\n  "
+            + "\n  ".join(diffs)
+        )
+
+
+# ------------------------------------------------------------
 # Introspection hook
 # ------------------------------------------------------------
 
@@ -165,17 +206,7 @@ def ferret_surface() -> dict:
         "layer_names": list(LAYER_NAMES),
         "signal_levels": list(SIGNAL_LEVELS),
         "fallacy_names": list(FALLACY_NAMES),
-        "signatures": {
-            "assess": "(text: str) -> (float, Dict[str, Any])",
-            "diagnose": (
-                "(text: str) -> "
-                "{layers, fallacies, camouflage_score, verdict}"
-            ),
-            "annotate_text": "(text: str) -> (str, Dict[str, int])",
-            "calculate_c3": (
-                "(Dict[str, float]) -> (float, Dict[str, float])"
-            ),
-        },
+        "signatures": dict(SIGNATURES),
     }
 
 
@@ -185,6 +216,9 @@ __all__ = [
     "LAYER_NAMES",
     "SIGNAL_LEVELS",
     "FALLACY_NAMES",
+    "SIGNATURES",
+    "SignatureMismatch",
+    "assert_signatures",
     "LayerResult",
     "DiagnoseResult",
     "DIAGNOSE",
