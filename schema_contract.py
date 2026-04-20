@@ -41,7 +41,7 @@ from sensor_suite.sensors import (
     truth_integrity_score,
 )
 
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"
 
 
 # ------------------------------------------------------------
@@ -148,6 +148,134 @@ CALCULATE_C3: Callable[[Dict[str, float]], Tuple[float, Dict[str, float]]] = (
 
 
 # ------------------------------------------------------------
+# Tier taxonomy
+# ------------------------------------------------------------
+# Shared four-level vocabulary with the sibling frameworks
+# (metabolic-accounting, TAF). String constants, not an enum --
+# strings survive JSON, IPC, and cross-framework imports cleanly.
+#
+# Logic-Ferret emits GREEN, AMBER, or RED from its own data.
+# BLACK is reserved: we have no physical irreversibility signal
+# of our own (rhetoric isn't thermodynamically unrecoverable),
+# so BLACK is only ever elevated into by a consumer that fuses
+# Ferret output with an irreversibility source (e.g. TAF past-cliff
+# basins). Defining it here keeps the vocabulary complete.
+# ------------------------------------------------------------
+
+GREEN = "GREEN"
+AMBER = "AMBER"
+RED   = "RED"
+BLACK = "BLACK"
+
+TIER_LEVELS: Tuple[str, ...] = (GREEN, AMBER, RED, BLACK)
+
+# Per-layer signal ("strong"/"moderate"/"weak") -> Tier.
+SIGNAL_TO_TIER: Dict[str, str] = {
+    "strong":   RED,
+    "moderate": AMBER,
+    "weak":     GREEN,
+}
+
+# Thresholds over a [0.0, 1.0] score. Sorted high-to-low; the
+# first threshold a score meets wins. Aligns with the existing
+# VERDICTS cutoffs in conflict_diagnosis:
+#     >= 0.70  HIGH CAMOUFLAGE    -> RED
+#     >= 0.45  MODERATE           -> AMBER
+#     <  0.45  LOW / MINIMAL      -> GREEN
+CAMOUFLAGE_TIER_THRESHOLDS: Tuple[Tuple[float, str], ...] = (
+    (0.70, RED),
+    (0.45, AMBER),
+    (0.00, GREEN),
+)
+
+
+def score_to_tier(score: float) -> str:
+    """
+    Map a [0.0, 1.0] score to a Tier string using
+    CAMOUFLAGE_TIER_THRESHOLDS. Never returns BLACK -- consumers
+    elevate to BLACK based on their own irreversibility signal.
+    """
+    for threshold, tier in CAMOUFLAGE_TIER_THRESHOLDS:
+        if score >= threshold:
+            return tier
+    return GREEN
+
+
+def layer_tiers(text: str) -> Dict[str, str]:
+    """
+    Per-layer Tier vector from one diagnose() pass.
+
+    Returns {layer_name: Tier} over all 8 LAYER_NAMES. Collapsing
+    this to the scalar camouflage_score loses which layer is hot;
+    consumers that care about *where* the camouflage is (TAF
+    cross-referencing Feasibility Gap vs Incentive Mapping) should
+    read this instead of the composite score.
+    """
+    result = conflict_diagnosis.diagnose(text)
+    return {lr["layer"]: SIGNAL_TO_TIER[lr["signal"]] for lr in result["layers"]}
+
+
+def sensor_tiers(text: str) -> Dict[str, str]:
+    """
+    Per-sensor Tier vector across SENSOR_REGISTRY.
+
+    Runs every registered sensor once and maps its scalar score
+    through score_to_tier. Lets a consumer see "Gaslight Frequency
+    is RED, everything else GREEN" without the composite averaging
+    it back into the noise floor.
+    """
+    tiers: Dict[str, str] = {}
+    for name, fn in SENSOR_REGISTRY.items():
+        score, _flags = fn(text)
+        tiers[name] = score_to_tier(score)
+    return tiers
+
+
+# ------------------------------------------------------------
+# Signatures
+# ------------------------------------------------------------
+# Stringified type signatures of every callable on the surface.
+# Treated as part of the contract: any change here must bump
+# SCHEMA_VERSION. Consumers can pin via assert_signatures().
+# ------------------------------------------------------------
+
+SIGNATURES: Dict[str, str] = {
+    "assess": "(text: str) -> (float, Dict[str, Any])",
+    "diagnose": "(text: str) -> {layers, fallacies, camouflage_score, verdict}",
+    "annotate_text": "(text: str) -> (str, Dict[str, int])",
+    "calculate_c3": "(Dict[str, float]) -> (float, Dict[str, float])",
+    "score_to_tier": "(float) -> str",
+    "layer_tiers": "(text: str) -> Dict[str, str]",
+    "sensor_tiers": "(text: str) -> Dict[str, str]",
+}
+
+
+class SignatureMismatch(Exception):
+    """Raised when a consumer's pinned signatures don't match this contract."""
+
+
+def assert_signatures(expected: Dict[str, str]) -> None:
+    """
+    Fail loud if the consumer's pinned signatures have drifted from ours.
+
+    TAF's ferret_fieldlink.py keeps its own SIGNATURES copy and calls this
+    on import. Any drift -> SignatureMismatch, naming every offending key.
+    """
+    diffs = []
+    for key, want in expected.items():
+        got = SIGNATURES.get(key)
+        if got is None:
+            diffs.append(f"{key}: missing from contract (expected {want!r})")
+        elif got != want:
+            diffs.append(f"{key}: expected {want!r}, contract has {got!r}")
+    if diffs:
+        raise SignatureMismatch(
+            f"Logic-Ferret schema {SCHEMA_VERSION} signature drift:\n  "
+            + "\n  ".join(diffs)
+        )
+
+
+# ------------------------------------------------------------
 # Introspection hook
 # ------------------------------------------------------------
 
@@ -165,17 +293,12 @@ def ferret_surface() -> dict:
         "layer_names": list(LAYER_NAMES),
         "signal_levels": list(SIGNAL_LEVELS),
         "fallacy_names": list(FALLACY_NAMES),
-        "signatures": {
-            "assess": "(text: str) -> (float, Dict[str, Any])",
-            "diagnose": (
-                "(text: str) -> "
-                "{layers, fallacies, camouflage_score, verdict}"
-            ),
-            "annotate_text": "(text: str) -> (str, Dict[str, int])",
-            "calculate_c3": (
-                "(Dict[str, float]) -> (float, Dict[str, float])"
-            ),
-        },
+        "tier_levels": list(TIER_LEVELS),
+        "signal_to_tier": dict(SIGNAL_TO_TIER),
+        "camouflage_tier_thresholds": [
+            [threshold, tier] for threshold, tier in CAMOUFLAGE_TIER_THRESHOLDS
+        ],
+        "signatures": dict(SIGNATURES),
     }
 
 
@@ -185,11 +308,21 @@ __all__ = [
     "LAYER_NAMES",
     "SIGNAL_LEVELS",
     "FALLACY_NAMES",
+    "SIGNATURES",
+    "SignatureMismatch",
+    "assert_signatures",
     "LayerResult",
     "DiagnoseResult",
     "DIAGNOSE",
     "ANNOTATE_TEXT",
     "CALCULATE_C3",
+    "GREEN", "AMBER", "RED", "BLACK",
+    "TIER_LEVELS",
+    "SIGNAL_TO_TIER",
+    "CAMOUFLAGE_TIER_THRESHOLDS",
+    "score_to_tier",
+    "layer_tiers",
+    "sensor_tiers",
     "ferret_surface",
 ]
 
