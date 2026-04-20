@@ -79,6 +79,8 @@
 import re
 from typing import Tuple, Dict, List
 
+from . import discourse_collapse
+
 
 # ============================================================
 # PATTERN REGISTRY
@@ -528,20 +530,62 @@ VERDICTS = [
     (0.00, "MINIMAL CAMOUFLAGE -- stated reasons check out. The ferret yawned and moved on."),
 ]
 
+# Score-to-tier thresholds. Mirrors schema_contract.CAMOUFLAGE_TIER_THRESHOLDS
+# but inlined to avoid a reverse import from sensor module up to contract.
+# The two must stay in lockstep; changes require a SCHEMA_VERSION bump.
+_TIER_THRESHOLDS = [(0.70, "RED"), (0.45, "AMBER"), (0.00, "GREEN")]
+
+# BLACK is NOT reachable from camouflage_score alone. It's emitted only
+# when Layer 9 (discourse_collapse) elevates, via one of three clauses.
+# Prose for each clause keeps the ferret voice.
+_BLACK_VERDICTS = {
+    "cognition_attack":
+        "DISCOURSE COLLAPSE -- cognition-attack profile. Self-sealing absorption + "
+        "critical-thinking suppression. The burrow caved in; the reasoning "
+        "apparatus itself is under direct attack.",
+    "violence_coordination":
+        "DISCOURSE COLLAPSE -- violence-coordination profile. Dehumanization + "
+        "action licensing. The rhetoric has flipped from alternative-to-force "
+        "to precursor-of-force.",
+    "compounding":
+        "DISCOURSE COLLAPSE -- compounding profile. Three or more collapse "
+        "modes firing at once. The machinery for distinguishing stated from "
+        "real reasons is no longer operational.",
+}
+
+
+def _score_to_tier(score: float) -> str:
+    for threshold, tier in _TIER_THRESHOLDS:
+        if score >= threshold:
+            return tier
+    return "GREEN"
+
 
 def diagnose(text: str) -> dict:
     """
-    Full 8-layer conflict diagnosis.
+    Full 9-layer conflict diagnosis.
 
-    The ferret enters the burrow at Layer 1 and tunnels through
-    all 8 layers, collecting evidence (matches) and classifying
-    signal strength at each stage.
+    Layers 1-8 tunnel through the camouflage burrow looking for
+    stated-vs-real-reason mismatch. Layer 9 checks whether the
+    machinery for distinguishing stated from real is still
+    operational at all; if not, tier elevates to BLACK regardless
+    of camouflage_score.
 
     Returns:
-        layers:           list of per-layer result dicts
-        fallacies:        {fallacy_name: count}
-        camouflage_score: float 0.0-1.0 (higher = more camouflage)
-        verdict:          human-readable assessment
+        layers:             list of per-layer result dicts (1-8)
+        fallacies:          {fallacy_name: count}
+        camouflage_score:   float 0.0-1.0 (higher = more camouflage)
+        verdict:            human-readable assessment
+        discourse_collapse: Layer 9 structured result (sub-detectors,
+                            reportage guardrail, elevation clause)
+        tier:               "GREEN" | "AMBER" | "RED" | "BLACK"
+                            BLACK iff Layer 9 elevates; otherwise
+                            mapped from camouflage_score.
+
+    Design note: BLACK does NOT force camouflage_score to saturate.
+    The two axes are genuinely different -- a text can have BLACK
+    discourse collapse and low camouflage (collapse without deception)
+    or high camouflage without collapse. Consumers see both.
     """
     layers = [fn(text) for fn in ALL_LAYERS]
     fallacies = detect_camouflage_fallacies(text)
@@ -557,13 +601,40 @@ def diagnose(text: str) -> dict:
     # fallacy bonus (capped at +0.15) -- war dance findings
     score = min(score + min(sum(fallacies.values()) * 0.03, 0.15), 1.0)
 
-    verdict = next(v for threshold, v in VERDICTS if score >= threshold)
+    # Layer 9: discourse collapse -- the only path to BLACK tier.
+    dc = discourse_collapse.detect(text)
+
+    if dc["black_elevation"]:
+        tier = "BLACK"
+        clause_key = dc["elevation_clause"].split("__")[0]
+        verdict = _BLACK_VERDICTS.get(
+            clause_key,
+            "DISCOURSE COLLAPSE -- see discourse_collapse.elevation_clause.",
+        )
+    elif dc["reportage_deescalated"]:
+        # Guardrail fired: raw detection would have been BLACK, but
+        # reportage framing was strong. Step down exactly one tier.
+        # Do NOT revert to camouflage_score mapping -- that would
+        # forget the Layer 9 signal entirely.
+        tier = "RED"
+        verdict = (
+            "DISCOURSE COLLAPSE MARKERS (reportage de-escalated) -- "
+            "Layer 9 detected collapse-tier rhetoric, but strong quote/analytic "
+            "framing suggests this text is reporting on or analyzing the "
+            "patterns rather than deploying them. See "
+            "discourse_collapse.sub_detectors for the raw signal."
+        )
+    else:
+        tier = _score_to_tier(score)
+        verdict = next(v for threshold, v in VERDICTS if score >= threshold)
 
     return {
         "layers": layers,
         "fallacies": fallacies,
         "camouflage_score": round(score, 3),
         "verdict": verdict,
+        "discourse_collapse": dc,
+        "tier": tier,
     }
 
 
