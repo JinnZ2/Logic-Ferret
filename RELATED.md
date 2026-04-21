@@ -121,6 +121,92 @@ trust-collapse and substrate-vector analysis. These are
 candidates for Ferret consumption when parsing prospectuses,
 10-Ks, or policy statements about financial claims.
 
+## Companion modules: epistemic discipline
+
+Two modules at the repo root pair with Ferret's core detection
+work. Neither is a text sensor; neither lives in `SENSOR_REGISTRY`
+or on `ferret_surface()`. They live alongside because they share
+one epistemic stance with the detectors: treat confident claims
+as scope-bounded measurements, not as laws.
+
+- `study_scope_audit.py` -- the *structural* side. Six-layer
+  audit (instrument, protocol, coupling, regime, causal model,
+  scope boundary) that a reasoning agent must declare BEFORE
+  citing a study as evidence. Scope-bounded verdicts
+  (IN/EDGE/OUT/UNDECLARED) replace true/false.
+
+- `informational_cost_audit.py` -- the *accounting* side. Why
+  false certainty is expensive informationally: each anomaly
+  adds an epicycle, each epicycle is committed debt, regime
+  shift collapses the whole stack. Uncertainty appears costly
+  upfront but pays linearly; certainty appears cheap but
+  accumulates exponentially. The geocentric-to-heliocentric
+  case worked through as data (HISTORICAL_PATTERN,
+  INFORMATION_COST_AUDIT, AI_IMPLICATIONS, VERDICT).
+
+Two readings of the same discipline, useful in combination:
+study_scope_audit tells you *how* to declare scope; the cost
+audit tells you *why* the alternative (deferring scope
+declaration) is ruinous. A reasoning agent uses the first to
+produce honest citations and the second to resist the
+comfort-pull that erodes them.
+
+Both are **outside the schema contract** -- the text-analysis
+surface stays scoped to text. Both re-export through
+`__init__.py`. The `VERDICT` dict from informational_cost_audit
+is aliased to `INFORMATIONAL_COST_VERDICT` at package scope to
+keep a generic name from colliding with future additions.
+
+### study_scope_audit usage
+
+```python
+from study_scope_audit import StudyScopeAudit  # or from logic_ferret
+audit = StudyScopeAudit(
+    claim=..., citation=...,
+    instrument=InstrumentAudit(...),
+    protocol=ProtocolAudit(...),
+    coupling=DomainCouplingAudit(...),
+    regime=RegimeAudit(...),
+    causal_model=CausalModelAudit(...),
+    scope=ScopeBoundary(...),
+    deployment_context={"marine environment": True},
+)
+audit.audit_report()  # returns scope-bounded verdict + blind spots
+```
+
+Historical calibration corpus in `HISTORICAL_CASES` covers
+geocentrism, miasma theory, caloric theory, steady-state
+cosmology, and low-fat-diet consensus -- each showing the same
+pattern: *correct within instrument scope, revealed as incomplete
+when the measurable domain expanded*.
+
+### informational_cost_audit usage
+
+```python
+from informational_cost_audit import (
+    INFORMATION_COST_AUDIT, VERDICT, AI_IMPLICATIONS,
+)
+
+# Side-by-side cost comparison of commitment vs. uncertainty
+INFORMATION_COST_AUDIT["geocentrism_path"]["cost_when_regime_shifts"]
+# -> "CATASTROPHIC -- everything has to be rebuilt from scratch..."
+
+VERDICT["one_liner"]
+# -> "false certainty is a loan that comes due when the
+#     measurement frontier advances. honest uncertainty pays
+#     as you go."
+
+AI_IMPLICATIONS["the_real_question_for_AI"]
+# -> "are you optimizing for apparent low cost NOW, or for
+#     true low cost OVER TIME? comfort vs. resilience?"
+```
+
+Pure-data module -- dicts and lists, no functions. Intended to
+be read directly by AI systems as part of their reasoning
+prelude, the way a system prompt is. `HISTORICAL_PATTERN`
+enumerates the nine-step recurrence that the scope audit exists
+to interrupt.
+
 ## Versioning promise
 
 Each framework publishes a `SCHEMA_VERSION`. Cross-framework
