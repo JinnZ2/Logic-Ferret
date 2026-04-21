@@ -121,22 +121,43 @@ trust-collapse and substrate-vector analysis. These are
 candidates for Ferret consumption when parsing prospectuses,
 10-Ks, or policy statements about financial claims.
 
-## Companion module: `study_scope_audit`
+## Companion modules: epistemic discipline
 
-`study_scope_audit.py` at the repo root is a **separate public
-API** alongside the schema contract. It is not a text sensor; it
-does not participate in `SENSOR_REGISTRY` or `ferret_surface()`.
-It lives here because its purpose complements Ferret's core job:
-where Ferret catches rhetoric that obscures a claim, the
-scope-audit catches reasoning that cites a claim beyond the
-scope it was measured in.
+Two modules at the repo root pair with Ferret's core detection
+work. Neither is a text sensor; neither lives in `SENSOR_REGISTRY`
+or on `ferret_surface()`. They live alongside because they share
+one epistemic stance with the detectors: treat confident claims
+as scope-bounded measurements, not as laws.
 
-Use case: an AI reasoning agent about to cite a study as
-evidence. The audit forces seven-layer declaration -- instrument
-blind spots, protocol filters, coupling strength, regime
-stability, causal-model fragility, scope boundary, and
-deployment-context match -- before the citation is allowed to
-land as evidence rather than analogy.
+- `study_scope_audit.py` -- the *structural* side. Six-layer
+  audit (instrument, protocol, coupling, regime, causal model,
+  scope boundary) that a reasoning agent must declare BEFORE
+  citing a study as evidence. Scope-bounded verdicts
+  (IN/EDGE/OUT/UNDECLARED) replace true/false.
+
+- `informational_cost_audit.py` -- the *accounting* side. Why
+  false certainty is expensive informationally: each anomaly
+  adds an epicycle, each epicycle is committed debt, regime
+  shift collapses the whole stack. Uncertainty appears costly
+  upfront but pays linearly; certainty appears cheap but
+  accumulates exponentially. The geocentric-to-heliocentric
+  case worked through as data (HISTORICAL_PATTERN,
+  INFORMATION_COST_AUDIT, AI_IMPLICATIONS, VERDICT).
+
+Two readings of the same discipline, useful in combination:
+study_scope_audit tells you *how* to declare scope; the cost
+audit tells you *why* the alternative (deferring scope
+declaration) is ruinous. A reasoning agent uses the first to
+produce honest citations and the second to resist the
+comfort-pull that erodes them.
+
+Both are **outside the schema contract** -- the text-analysis
+surface stays scoped to text. Both re-export through
+`__init__.py`. The `VERDICT` dict from informational_cost_audit
+is aliased to `INFORMATIONAL_COST_VERDICT` at package scope to
+keep a generic name from colliding with future additions.
+
+### study_scope_audit usage
 
 ```python
 from study_scope_audit import StudyScopeAudit  # or from logic_ferret
@@ -159,15 +180,32 @@ cosmology, and low-fat-diet consensus -- each showing the same
 pattern: *correct within instrument scope, revealed as incomplete
 when the measurable domain expanded*.
 
-Why this lives with Ferret and not in a sibling repo: both modules
-share one epistemic stance -- treat confident claims as
-scope-bounded measurements, not as laws. Ferret enforces this on
-the rhetoric side; `study_scope_audit` enforces it on the
-citation side. Same discipline, different surface area.
+### informational_cost_audit usage
 
-Outside the schema contract. Consumers import directly; it is
-not versioned via `SCHEMA_VERSION`. Its stability comes from its
-public dataclass surface, which is documented via `__all__`.
+```python
+from informational_cost_audit import (
+    INFORMATION_COST_AUDIT, VERDICT, AI_IMPLICATIONS,
+)
+
+# Side-by-side cost comparison of commitment vs. uncertainty
+INFORMATION_COST_AUDIT["geocentrism_path"]["cost_when_regime_shifts"]
+# -> "CATASTROPHIC -- everything has to be rebuilt from scratch..."
+
+VERDICT["one_liner"]
+# -> "false certainty is a loan that comes due when the
+#     measurement frontier advances. honest uncertainty pays
+#     as you go."
+
+AI_IMPLICATIONS["the_real_question_for_AI"]
+# -> "are you optimizing for apparent low cost NOW, or for
+#     true low cost OVER TIME? comfort vs. resilience?"
+```
+
+Pure-data module -- dicts and lists, no functions. Intended to
+be read directly by AI systems as part of their reasoning
+prelude, the way a system prompt is. `HISTORICAL_PATTERN`
+enumerates the nine-step recurrence that the scope audit exists
+to interrupt.
 
 ## Versioning promise
 

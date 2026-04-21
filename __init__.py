@@ -46,6 +46,18 @@ from .study_scope_audit import (
     HISTORICAL_CASES,
 )
 
+from .informational_cost_audit import (
+    GEOCENTRIC_COMFORT_STATE,
+    ANOMALIES_UNDER_GEOCENTRISM,
+    INFORMATION_COST_ACCUMULATION,
+    HELIOCENTRIC_UNCERTAINTY_STATE,
+    INFORMATION_COST_AUDIT,
+    INFORMATION_THEORY_INSIGHT,
+    AI_IMPLICATIONS,
+    HISTORICAL_PATTERN,
+    VERDICT as INFORMATIONAL_COST_VERDICT,
+)
+
 __all__ = [
     # --- schema_contract (text-analysis surface) ---
     "SCHEMA_VERSION",
@@ -89,5 +101,17 @@ __all__ = [
     "AI_REASONING_RULE",
     "META_INSIGHT",
     "HISTORICAL_CASES",
+    # --- informational_cost_audit (reasoning artifact) ---
+    # VERDICT is re-exported as INFORMATIONAL_COST_VERDICT to
+    # avoid a generic name at package scope.
+    "GEOCENTRIC_COMFORT_STATE",
+    "ANOMALIES_UNDER_GEOCENTRISM",
+    "INFORMATION_COST_ACCUMULATION",
+    "HELIOCENTRIC_UNCERTAINTY_STATE",
+    "INFORMATION_COST_AUDIT",
+    "INFORMATION_THEORY_INSIGHT",
+    "AI_IMPLICATIONS",
+    "HISTORICAL_PATTERN",
+    "INFORMATIONAL_COST_VERDICT",
 ]
 
