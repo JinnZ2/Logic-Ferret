@@ -99,8 +99,11 @@ SEMANTIC_INVERSION_MARKERS = [
 SELF_SEALING_MARKERS = [
     # critic-dismissal category words
     r"\b(shills?|bots?|paid actors?|crisis actors?|psyops?|NPCs?|sheep(le)?|compromised|controlled opposition)\b",
-    # evidence-flip: denial/silence/cover-up "proves" the claim
-    r"\b(their|the)\s+(denial|silence|cover[- ]?up)\s+(is|proves|reveals|confirms|just shows)\b",
+    # evidence-flip: denial/silence/cover-up "proves" the claim.
+    # Optional adverb slot (just/simply/only) covers "their denial just
+    # proves" / "their denial simply shows" etc. -- these are the
+    # natural forms and the original regex missed them.
+    r"\b(their|the)\s+(denial|silence|cover[- ]?up)\s+(just |simply |only )?(is|proves|reveals|confirms|shows|is evidence)\b",
     # exit-preemption: disagreement is evidence of enemy status
     r"\bif you (disagree|question|doubt)[^.]{0,60}\b(one of them|compromised|part of|shill|enemy)\b",
     # absorptive framing
