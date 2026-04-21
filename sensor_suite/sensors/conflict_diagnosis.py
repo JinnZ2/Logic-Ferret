@@ -684,6 +684,41 @@ def _signal_icon(sig: str) -> str:
     }.get(sig, " ? ")
 
 
+def _tier_banner(tier: str) -> str:
+    """Prominent tier marker for CLI output."""
+    return {
+        "GREEN": ">> TIER: GREEN  (stated reasons check out)",
+        "AMBER": ">> TIER: AMBER  (narrative and reality not aligned)",
+        "RED":   ">> TIER: RED    (strong camouflage; the ferret is digging)",
+        "BLACK": ">> TIER: BLACK  (DISCOURSE COLLAPSE -- reasoning apparatus under attack)",
+    }.get(tier, f">> TIER: {tier}")
+
+
+def _print_layer_9_section(dc: dict) -> None:
+    """Emit the Layer 9 / discourse_collapse block if any marker fired."""
+    if not dc["alert"] and not dc["black_elevation"] and not dc["reportage_deescalated"]:
+        return
+
+    print()
+    print("   LAYER 9 -- DISCOURSE COLLAPSE")
+    for name, sub in dc["sub_detectors"].items():
+        if sub["signal"] == "weak":
+            continue
+        icon = _signal_icon(sub["signal"])
+        preview = "; ".join(sub["matches"][:3])
+        if len(preview) > 42:
+            preview = preview[:39] + "..."
+        print(f"     {name:<36}[{icon}] {sub['hits']:>3}   {preview}")
+
+    if dc["reportage"]["signal"] != "weak":
+        print(f"     reportage signal: {dc['reportage']['signal']} ({dc['reportage']['hits']} hits)")
+
+    if dc["black_elevation"]:
+        print(f"     BLACK ELEVATION: {dc['elevation_clause']}")
+    elif dc["reportage_deescalated"]:
+        print(f"     de-escalated via reportage guardrail ({dc['elevation_clause']})")
+
+
 def print_diagnosis_table(text: str) -> None:
     """
     Formatted diagnostic table.
@@ -715,8 +750,11 @@ def print_diagnosis_table(text: str) -> None:
         for name, count in result["fallacies"].items():
             print(f"     {name}: {count}")
 
+    _print_layer_9_section(result["discourse_collapse"])
+
     print()
     print(f"   Camouflage Score: {result['camouflage_score']:.3f}")
+    print(f"   {_tier_banner(result['tier'])}")
     print(f"   {result['verdict']}")
     print("=" * 88)
     print()
@@ -767,7 +805,26 @@ def print_flowchart(text: str) -> None:
     print("   [Loop re-enters core]")
     print("   The burrow circles back. Recursion continues until")
     print("   collapse, bypass, or camouflaged stagnation becomes normal.")
+
+    # Layer 9 appears as an exit from the burrow, not another tunnel step.
+    dc = result["discourse_collapse"]
+    if dc["black_elevation"] or dc["reportage_deescalated"] or dc["alert"]:
+        print("          |")
+        print("          v")
+        print("   [LAYER 9 -- the ferret surfaces]")
+        print("   The burrow has caved in. Further tunneling is pointless;")
+        print("   the reasoning substrate itself is compromised.")
+        for name, sub in dc["sub_detectors"].items():
+            if sub["signal"] != "weak":
+                icon = _signal_icon(sub["signal"])
+                print(f"   [{icon}] {name}  ({sub['hits']} hits)")
+        if dc["black_elevation"]:
+            print(f"   >> BLACK elevation clause: {dc['elevation_clause']}")
+        elif dc["reportage_deescalated"]:
+            print(f"   >> de-escalated (reportage framing): {dc['elevation_clause']}")
+
     print()
     print(f"   CAMOUFLAGE SCORE: {result['camouflage_score']:.3f}")
+    print(f"   {_tier_banner(result['tier'])}")
     print(f"   {result['verdict']}")
     print()
