@@ -26,6 +26,7 @@ from typing import Any, Callable, Dict, List, Tuple, TypedDict
 from sensor_suite.sensors import (
     agency_detector,
     conflict_diagnosis,
+    discourse_collapse,
     fallacy_overlay,
     false_urgency,
     gaslight_frequency_meter,
@@ -41,7 +42,7 @@ from sensor_suite.sensors import (
     truth_integrity_score,
 )
 
-SCHEMA_VERSION = "1.1.0"
+SCHEMA_VERSION = "1.2.0"
 
 
 # ------------------------------------------------------------
@@ -73,6 +74,7 @@ SENSOR_REGISTRY: Dict[str, AssessFn] = {
     "True Accountability":       true_accountability_sensor.assess,
     "Meritocracy Detector":      meritocracy_detector.assess,
     "Conflict Diagnosis":        conflict_diagnosis.assess,
+    "Discourse Collapse":        discourse_collapse.assess,
 }
 
 
@@ -96,11 +98,38 @@ class LayerResult(TypedDict, total=False):
     divergence: int
 
 
+class SubDetectorResult(TypedDict, total=False):
+    name: str
+    hits: int
+    matches: List[str]
+    signal: str
+    # action_licensing only:
+    dehumanization_hits: int
+    dehumanization_matches: List[str]
+
+
+class ReportageResult(TypedDict):
+    hits: int
+    matches: List[str]
+    signal: str
+
+
+class DiscourseCollapseResult(TypedDict):
+    sub_detectors: Dict[str, SubDetectorResult]  # keys drawn from DISCOURSE_COLLAPSE_MODES
+    reportage: ReportageResult
+    black_elevation: bool
+    elevation_clause: str                         # see ELEVATION_CLAUSES
+    reportage_deescalated: bool
+    alert: bool                                   # markers fired but no elevation
+
+
 class DiagnoseResult(TypedDict):
     layers: List[LayerResult]
     fallacies: Dict[str, int]
     camouflage_score: float
     verdict: str
+    tier: str                                     # member of TIER_LEVELS
+    discourse_collapse: DiscourseCollapseResult
 
 
 LAYER_NAMES: Tuple[str, ...] = (
@@ -215,6 +244,41 @@ def layer_tiers(text: str) -> Dict[str, str]:
     return {lr["layer"]: SIGNAL_TO_TIER[lr["signal"]] for lr in result["layers"]}
 
 
+# ------------------------------------------------------------
+# Layer 9: Discourse Collapse
+# ------------------------------------------------------------
+# BLACK-tier sub-detectors and elevation clauses. Only Layer 9
+# emits BLACK; the other 8 camouflage layers cap at RED.
+#
+# DISCOURSE_COLLAPSE_MODES are the sub-detector keys returned in
+# DiscourseCollapseResult.sub_detectors.
+#
+# ELEVATION_CLAUSES are the possible values of elevation_clause.
+# When the reportage guardrail fires, the clause is suffixed with
+# REPORTAGE_DEESCALATED_SUFFIX (e.g. "cognition_attack__deescalated_reportage").
+# ------------------------------------------------------------
+
+DISCOURSE_COLLAPSE_MODES: Tuple[str, ...] = (
+    "semantic_inversion",
+    "self_sealing",
+    "action_licensing",
+    "critical_thinking_suppression",
+)
+
+ELEVATION_CLAUSES: Tuple[str, ...] = (
+    "none",
+    "cognition_attack",
+    "violence_coordination",
+    "compounding",
+)
+
+REPORTAGE_DEESCALATED_SUFFIX = "__deescalated_reportage"
+
+DISCOURSE_COLLAPSE_DETECT: Callable[[str], DiscourseCollapseResult] = (
+    discourse_collapse.detect
+)
+
+
 def sensor_tiers(text: str) -> Dict[str, str]:
     """
     Per-sensor Tier vector across SENSOR_REGISTRY.
@@ -241,12 +305,16 @@ def sensor_tiers(text: str) -> Dict[str, str]:
 
 SIGNATURES: Dict[str, str] = {
     "assess": "(text: str) -> (float, Dict[str, Any])",
-    "diagnose": "(text: str) -> {layers, fallacies, camouflage_score, verdict}",
+    "diagnose": (
+        "(text: str) -> {layers, fallacies, camouflage_score, "
+        "verdict, tier, discourse_collapse}"
+    ),
     "annotate_text": "(text: str) -> (str, Dict[str, int])",
     "calculate_c3": "(Dict[str, float]) -> (float, Dict[str, float])",
     "score_to_tier": "(float) -> str",
     "layer_tiers": "(text: str) -> Dict[str, str]",
     "sensor_tiers": "(text: str) -> Dict[str, str]",
+    "discourse_collapse_detect": "(text: str) -> DiscourseCollapseResult",
 }
 
 
@@ -298,6 +366,16 @@ def ferret_surface() -> dict:
         "camouflage_tier_thresholds": [
             [threshold, tier] for threshold, tier in CAMOUFLAGE_TIER_THRESHOLDS
         ],
+        "discourse_collapse_modes": list(DISCOURSE_COLLAPSE_MODES),
+        "elevation_clauses": list(ELEVATION_CLAUSES),
+        "reportage_deescalated_suffix": REPORTAGE_DEESCALATED_SUFFIX,
+        "black_elevation_policy": (
+            "BLACK is emitted only by Layer 9 (discourse_collapse). "
+            "The other 8 camouflage layers cap at RED. "
+            "Reportage guardrail de-escalates BLACK -> RED on strong "
+            "quote/analytic framing, and suffixes the elevation_clause "
+            "with reportage_deescalated_suffix."
+        ),
         "signatures": dict(SIGNATURES),
     }
 
@@ -312,14 +390,21 @@ __all__ = [
     "SignatureMismatch",
     "assert_signatures",
     "LayerResult",
+    "SubDetectorResult",
+    "ReportageResult",
+    "DiscourseCollapseResult",
     "DiagnoseResult",
     "DIAGNOSE",
     "ANNOTATE_TEXT",
     "CALCULATE_C3",
+    "DISCOURSE_COLLAPSE_DETECT",
     "GREEN", "AMBER", "RED", "BLACK",
     "TIER_LEVELS",
     "SIGNAL_TO_TIER",
     "CAMOUFLAGE_TIER_THRESHOLDS",
+    "DISCOURSE_COLLAPSE_MODES",
+    "ELEVATION_CLAUSES",
+    "REPORTAGE_DEESCALATED_SUFFIX",
     "score_to_tier",
     "layer_tiers",
     "sensor_tiers",
