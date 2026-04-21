@@ -121,6 +121,54 @@ trust-collapse and substrate-vector analysis. These are
 candidates for Ferret consumption when parsing prospectuses,
 10-Ks, or policy statements about financial claims.
 
+## Companion module: `study_scope_audit`
+
+`study_scope_audit.py` at the repo root is a **separate public
+API** alongside the schema contract. It is not a text sensor; it
+does not participate in `SENSOR_REGISTRY` or `ferret_surface()`.
+It lives here because its purpose complements Ferret's core job:
+where Ferret catches rhetoric that obscures a claim, the
+scope-audit catches reasoning that cites a claim beyond the
+scope it was measured in.
+
+Use case: an AI reasoning agent about to cite a study as
+evidence. The audit forces seven-layer declaration -- instrument
+blind spots, protocol filters, coupling strength, regime
+stability, causal-model fragility, scope boundary, and
+deployment-context match -- before the citation is allowed to
+land as evidence rather than analogy.
+
+```python
+from study_scope_audit import StudyScopeAudit  # or from logic_ferret
+audit = StudyScopeAudit(
+    claim=..., citation=...,
+    instrument=InstrumentAudit(...),
+    protocol=ProtocolAudit(...),
+    coupling=DomainCouplingAudit(...),
+    regime=RegimeAudit(...),
+    causal_model=CausalModelAudit(...),
+    scope=ScopeBoundary(...),
+    deployment_context={"marine environment": True},
+)
+audit.audit_report()  # returns scope-bounded verdict + blind spots
+```
+
+Historical calibration corpus in `HISTORICAL_CASES` covers
+geocentrism, miasma theory, caloric theory, steady-state
+cosmology, and low-fat-diet consensus -- each showing the same
+pattern: *correct within instrument scope, revealed as incomplete
+when the measurable domain expanded*.
+
+Why this lives with Ferret and not in a sibling repo: both modules
+share one epistemic stance -- treat confident claims as
+scope-bounded measurements, not as laws. Ferret enforces this on
+the rhetoric side; `study_scope_audit` enforces it on the
+citation side. Same discipline, different surface area.
+
+Outside the schema contract. Consumers import directly; it is
+not versioned via `SCHEMA_VERSION`. Its stability comes from its
+public dataclass surface, which is documented via `__all__`.
+
 ## Versioning promise
 
 Each framework publishes a `SCHEMA_VERSION`. Cross-framework

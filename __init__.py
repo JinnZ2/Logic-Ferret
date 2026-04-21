@@ -29,7 +29,25 @@ from .schema_contract import (
     ferret_surface,
 )
 
+from .study_scope_audit import (
+    Coupling,
+    Regime,
+    ScopeStatus,
+    InstrumentAudit,
+    ProtocolAudit,
+    DomainCouplingAudit,
+    RegimeAudit,
+    CausalModelAudit,
+    ScopeBoundary,
+    StudyScopeAudit,
+    PREMISE,
+    AI_REASONING_RULE,
+    META_INSIGHT,
+    HISTORICAL_CASES,
+)
+
 __all__ = [
+    # --- schema_contract (text-analysis surface) ---
     "SCHEMA_VERSION",
     "SENSOR_REGISTRY",
     "LAYER_NAMES",
@@ -56,4 +74,20 @@ __all__ = [
     "layer_tiers",
     "sensor_tiers",
     "ferret_surface",
+    # --- study_scope_audit (AI-reasoning discipline) ---
+    "Coupling",
+    "Regime",
+    "ScopeStatus",
+    "InstrumentAudit",
+    "ProtocolAudit",
+    "DomainCouplingAudit",
+    "RegimeAudit",
+    "CausalModelAudit",
+    "ScopeBoundary",
+    "StudyScopeAudit",
+    "PREMISE",
+    "AI_REASONING_RULE",
+    "META_INSIGHT",
+    "HISTORICAL_CASES",
 ]
+
