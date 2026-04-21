@@ -60,13 +60,39 @@ loud on drift.
 
 ## Integration sketches (not yet implemented)
 
-### TAF <-> Ferret
+### TAF <-> Ferret  (handshake is live and two-way)
 
-TAF's `ferret_fieldlink.py` mirrors `schema_contract` for two
-purposes: (1) route specific Ferret sensor scores into TAF's
-social-overhead accounting, and (2) elevate TAF's irreversibility
-flags into BLACK when paired with Ferret's discourse-collapse
-signals on the same text.
+Confirmed present on TAF's side:
+
+- `thermodynamic-accountability-framework/schemas/logic_ferret_contract.py`
+  -- declared mirror of this contract. Pins `UPSTREAM_SCHEMA_VERSION`
+  and re-declares sensor names, layer names, signal levels, and
+  `LayerResult` / `DiagnoseResult` shapes so TAF can validate our
+  surface at startup via `validate_ferret_surface()`.
+- `thermodynamic-accountability-framework/core/integrations/ferret_fieldlink.py`
+  -- runtime bridge. Uses the contract mirror to route Ferret
+  outputs into TAF's accounting.
+
+Same pattern applied to every TAF sibling:
+`schemas/metabolic_accounting_contract.py`,
+`schemas/mathematic_economics_contract.py`,
+`schemas/trust_exit_contract.py`.
+
+**Version lag to note:** TAF's logic_ferret_contract.py was last
+pinned at our v1.0.0. Everything from v1.1.0 forward (tier
+taxonomy, Layer 9 discourse_collapse, BLACK tier, `tier` +
+`discourse_collapse` fields on `DiagnoseResult`, Discourse
+Collapse sensor) is additive and backward-compatible -- TAF's
+v1.0 pin still validates against our current surface, they just
+can't *see* the new fields until they refresh. If TAF adopts
+`assert_signatures` to pin signature strings (not just the
+surface snapshot), they'll get a clean `SignatureMismatch` on
+our `diagnose()` signature drift and know exactly what to update.
+
+Two purposes the bridge serves: (1) route specific Ferret sensor
+scores into TAF's social-overhead accounting, and (2) elevate
+TAF's irreversibility flags into BLACK when paired with Ferret's
+discourse-collapse signals on the same text.
 
 Cross-reference map:
 
