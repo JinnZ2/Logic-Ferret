@@ -121,21 +121,29 @@ trust-collapse and substrate-vector analysis. These are
 candidates for Ferret consumption when parsing prospectuses,
 10-Ks, or policy statements about financial claims.
 
-## Companion modules: epistemic discipline
+## Companion modules in `knowledge/`
 
-Two modules at the repo root pair with Ferret's core detection
-work. Neither is a text sensor; neither lives in `SENSOR_REGISTRY`
-or on `ferret_surface()`. They live alongside because they share
-one epistemic stance with the detectors: treat confident claims
-as scope-bounded measurements, not as laws.
+Two reasoning-discipline modules live alongside the
+knowledge-liberation framework in `knowledge/`. Neither is a
+text sensor; neither lives in `SENSOR_REGISTRY` or on
+`ferret_surface()`. They share the folder because they share
+the same epistemic stance: treat confident claims as
+scope-bounded measurements, not as laws.
 
-- `study_scope_audit.py` -- the *structural* side. Six-layer
+They join an existing operational pipeline in `knowledge/`
+(`scope_mapper.py`, `edge_explorer.py`, `application_builder.py`,
+`knowledge_liberation.py` orchestrator, plus `interactive_navigator.py`,
+`shadow_catalog.py`, `recontextualizer.py` -- see
+`knowledge/README.md`). The two companions are the declarative
+and motivational sides of the same discipline:
+
+- `knowledge/study_scope_audit.py` -- the *structural* side. Six-layer
   audit (instrument, protocol, coupling, regime, causal model,
   scope boundary) that a reasoning agent must declare BEFORE
   citing a study as evidence. Scope-bounded verdicts
   (IN/EDGE/OUT/UNDECLARED) replace true/false.
 
-- `informational_cost_audit.py` -- the *accounting* side. Why
+- `knowledge/informational_cost_audit.py` -- the *accounting* side. Why
   false certainty is expensive informationally: each anomaly
   adds an epicycle, each epicycle is committed debt, regime
   shift collapses the whole stack. Uncertainty appears costly
@@ -143,6 +151,12 @@ as scope-bounded measurements, not as laws.
   accumulates exponentially. The geocentric-to-heliocentric
   case worked through as data (HISTORICAL_PATTERN,
   INFORMATION_COST_AUDIT, AI_IMPLICATIONS, VERDICT).
+
+Read alongside the operational pipeline: `scope_mapper` produces
+a structured map of what a specific study actually measured;
+`study_scope_audit` declares the layers that must be audited
+before the claim is cited anywhere; `informational_cost_audit`
+explains why deferring that audit is ruinous.
 
 Two readings of the same discipline, useful in combination:
 study_scope_audit tells you *how* to declare scope; the cost
@@ -160,7 +174,7 @@ keep a generic name from colliding with future additions.
 ### study_scope_audit usage
 
 ```python
-from study_scope_audit import StudyScopeAudit  # or from logic_ferret
+from knowledge.study_scope_audit import StudyScopeAudit  # or from logic_ferret
 audit = StudyScopeAudit(
     claim=..., citation=...,
     instrument=InstrumentAudit(...),
@@ -183,7 +197,7 @@ when the measurable domain expanded*.
 ### informational_cost_audit usage
 
 ```python
-from informational_cost_audit import (
+from knowledge.informational_cost_audit import (
     INFORMATION_COST_AUDIT, VERDICT, AI_IMPLICATIONS,
 )
 

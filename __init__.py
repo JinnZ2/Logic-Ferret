@@ -29,7 +29,7 @@ from .schema_contract import (
     ferret_surface,
 )
 
-from .study_scope_audit import (
+from .knowledge.study_scope_audit import (
     Coupling,
     Regime,
     ScopeStatus,
@@ -46,7 +46,7 @@ from .study_scope_audit import (
     HISTORICAL_CASES,
 )
 
-from .informational_cost_audit import (
+from .knowledge.informational_cost_audit import (
     GEOCENTRIC_COMFORT_STATE,
     ANOMALIES_UNDER_GEOCENTRISM,
     INFORMATION_COST_ACCUMULATION,

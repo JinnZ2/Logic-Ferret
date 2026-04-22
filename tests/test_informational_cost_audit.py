@@ -14,7 +14,7 @@ Run directly:
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import informational_cost_audit as ica
+from knowledge import informational_cost_audit as ica
 
 
 def test_module_importable():
