@@ -154,7 +154,7 @@ messages. Any such spot is also marked in-source with a
 
 | file | status | __main__ runs? |
 |---|---|---|
-| `knowledge/scope_mapper.py`          | pending | |
+| `knowledge/scope_mapper.py`          | RECONSTRUCTED | yes |
 | `knowledge/edge_explorer.py`         | pending | |
 | `knowledge/application_builder.py`   | pending | |
 | `knowledge/knowledge_liberation.py`  | pending | |
