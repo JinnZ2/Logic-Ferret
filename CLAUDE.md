@@ -156,7 +156,7 @@ messages. Any such spot is also marked in-source with a
 |---|---|---|
 | `knowledge/scope_mapper.py`          | RECONSTRUCTED | yes |
 | `knowledge/edge_explorer.py`         | RECONSTRUCTED | yes |
-| `knowledge/application_builder.py`   | pending | |
+| `knowledge/application_builder.py`   | RECONSTRUCTED | yes |
 | `knowledge/knowledge_liberation.py`  | pending | |
 | `knowledge/interactive_navigator.py` | pending | |
 | `knowledge/shadow_catalog.py`        | pending | |
