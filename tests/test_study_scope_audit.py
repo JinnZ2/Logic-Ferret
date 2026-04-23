@@ -12,7 +12,7 @@ Run directly:
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from study_scope_audit import (
+from knowledge.study_scope_audit import (
     Coupling, Regime, ScopeStatus,
     InstrumentAudit, ProtocolAudit, DomainCouplingAudit,
     RegimeAudit, CausalModelAudit, ScopeBoundary,
