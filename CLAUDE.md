@@ -42,6 +42,12 @@ Logic-Ferret/
   integrations/                  # adapters to sibling frameworks (standalone)
     financial_text.py            # v0 adapter for money_signal/investment_signal
 
+  legacy/                        # superseded files, kept not deleted
+    README.md                    # lineage record: claim -> result -> edit
+    Logic_fallacy_ferret.py      # FALSIFIED: inverted score polarity
+    propaganda_tone.py           # SUPERSEDED: orphaned duplicate
+    weights.txt                  # HYPOTHESIS: 7 of 8 C3 weights, confirmed
+
   knowledge/                     # knowledge-liberation framework + reasoning companions
     README.md                    # operational pipeline docs
     scope_mapper.py              # operational: map a study's actual scope
@@ -66,6 +72,7 @@ Logic-Ferret/
     test_study_scope_audit.py
     test_informational_cost_audit.py
     test_knowledge_integrity.py  # damage-pattern regression guard + smoke tests
+    test_legacy_quarantine.py    # legacy/ inertness + lineage record
 ```
 
 ## Intent routing
@@ -86,6 +93,8 @@ Use this to jump to the right module for what you're doing:
 | Explain why false certainty is expensive | `knowledge.informational_cost_audit` (pure data) |
 | Understand the tier taxonomy | `schema_contract.TIER_LEVELS` + `SIGNAL_TO_TIER` |
 | See cross-framework integration | `RELATED.md` |
+| Find out why a claim changed | `legacy/README.md` |
+| Retire a superseded file | `legacy/` + an entry (see below) |
 
 ## Contracts and version promises
 
@@ -102,13 +111,45 @@ informational_cost_audit) are **outside** the schema contract.
 Their stability is documented via their `__all__` lists. They
 are NOT versioned through `SCHEMA_VERSION`.
 
+## Retiring a file (the legacy/ convention)
+
+This repo advances by the loop it also measures for: hypothesize,
+run, read the result, edit the claim, look for what you didn't ask,
+rerun. **Deleting a falsified file deletes the falsification with
+it** -- what's left looks like it was right the first time, which is
+the exact failure `knowledge/informational_cost_audit.py` is about.
+
+So superseded files are retired, not deleted:
+
+1. `git mv` the file into `legacy/` (never copy -- `git log --follow`
+   must keep walking through to the ancestor).
+2. Add an entry to `legacy/README.md` under a heading of the form
+   `## <filename> -- VERDICT` (filename in backticks), recording the
+   original claim, what falsified it (or that nothing did), the
+   edited claim, and what still carries forward.
+3. Add a `Superseded by` row to that entry's table, pointing at the
+   live path, so the lineage pointer resolves.
+4. If the edit fixed a real defect, pin it with a regression test so
+   the falsified form cannot silently return.
+
+`legacy/` deliberately has **no `__init__.py`** -- it must stay
+un-importable and unpackaged. `tests/test_legacy_quarantine.py`
+enforces every point above: quarantine inertness, documentation
+completeness, pointer resolution, and the two current regression pins
+(sensor polarity, C3 weight table).
+
+Anything found but not resolved goes in that README's **Open
+questions** section rather than into a commit message, where it
+stops being searchable.
+
 ## Tests
 
 `python tests/run_all.py` runs the whole suite via subprocess.
 Each file is also directly executable:
 `python tests/test_schema_contract.py` etc. No external runner,
-no pytest dependency. 98 tests across 10 files as of the
-completion of the knowledge/ reconstruction.
+no pytest dependency. 107 tests across 11 files as of the
+completion of the knowledge/ reconstruction and the legacy/
+quarantine.
 
 `tests/test_knowledge_integrity.py` is the regression guard for
 the damage described below. It asserts each of the four damage
