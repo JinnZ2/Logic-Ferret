@@ -65,6 +65,7 @@ Logic-Ferret/
     test_financial_text.py
     test_study_scope_audit.py
     test_informational_cost_audit.py
+    test_knowledge_integrity.py  # damage-pattern regression guard + smoke tests
 ```
 
 ## Intent routing
@@ -79,6 +80,8 @@ Use this to jump to the right module for what you're doing:
 | See what TAF can mirror | `schema_contract.ferret_surface()` |
 | Pin signatures and fail on drift | `schema_contract.assert_signatures()` |
 | Map a specific study's scope (operational) | `knowledge.scope_mapper.ScopeMapper` |
+| Match a study against known silence patterns | `knowledge.shadow_catalog.ShadowCatalog.diagnose()` |
+| Localize a silence to your own context | `knowledge.recontextualizer.Recontextualizer` |
 | Declare the 6-layer audit before citing a study | `knowledge.study_scope_audit.StudyScopeAudit` |
 | Explain why false certainty is expensive | `knowledge.informational_cost_audit` (pure data) |
 | Understand the tier taxonomy | `schema_contract.TIER_LEVELS` + `SIGNAL_TO_TIER` |
@@ -104,8 +107,16 @@ are NOT versioned through `SCHEMA_VERSION`.
 `python tests/run_all.py` runs the whole suite via subprocess.
 Each file is also directly executable:
 `python tests/test_schema_contract.py` etc. No external runner,
-no pytest dependency. 84 tests as of the last chunk before the
-knowledge/ reconstruction.
+no pytest dependency. 98 tests across 10 files as of the
+completion of the knowledge/ reconstruction.
+
+`tests/test_knowledge_integrity.py` is the regression guard for
+the damage described below. It asserts each of the four damage
+signatures against every file in `knowledge/`, runs every
+`__main__` demo block, and smoke-tests the behavior of
+`shadow_catalog` and `recontextualizer`. If the mangling pipeline
+runs again, this file fails with a message naming the signature
+rather than a bare `SyntaxError`.
 
 ## Known issues and reconstruction log
 
@@ -159,10 +170,28 @@ messages. Any such spot is also marked in-source with a
 | `knowledge/application_builder.py`   | RECONSTRUCTED | yes |
 | `knowledge/knowledge_liberation.py`  | RECONSTRUCTED | yes |
 | `knowledge/interactive_navigator.py` | RECONSTRUCTED | yes |
-| `knowledge/shadow_catalog.py`        | pending | |
-| `knowledge/recontextualizer.py`      | pending | |
+| `knowledge/shadow_catalog.py`        | RECONSTRUCTED | yes |
+| `knowledge/recontextualizer.py`      | RECONSTRUCTED | yes |
 
-(This table gets updated as each file is reconstructed.)
+**Reconstruction complete.** All seven operational modules parse,
+import, and run their demo blocks. `tests/test_knowledge_integrity.py`
+holds the line.
+
+Judgment calls in the final two files:
+
+- `shadow_catalog.py` -- none. Every fenced block sat at exactly one
+  indent level inside a `class` or `def`, so structure was
+  unambiguous. The 12 seeded patterns are pinned by ID in the test.
+- `recontextualizer.py` -- one. The continuation line of
+  `recontextualize_silences(silences, context)` arrived flush-left;
+  it was realigned under the open paren. Noted in-source.
+
+Both files were rebuilt by a scripted transform that applied only
+whitespace and delimiter repairs, then verified that the multiset of
+non-whitespace tokens was unchanged except for the removed fence
+markers and the `**name**`/`**main**` -> `__name__`/`__main__`
+repair. That check is what rules out silent content drift during
+re-indentation.
 
 ## Sibling frameworks
 
