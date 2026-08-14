@@ -3,6 +3,8 @@
 Human-facing exercises. The rest of this repo points sensors at text;
 this points questions at a person.
 
+License: CC0
+
 ## The article check
 
 A structured read you do on an article, compared afterward against

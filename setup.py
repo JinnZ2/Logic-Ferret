@@ -42,12 +42,12 @@ setup(
     long_description=(HERE / "README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
     url="https://github.com/JinnZ2/Logic-Ferret",
-    # Matches the LICENSE file at repo root. Note that every module in
-    # knowledge/ declares "License: CC0" in its own docstring, which
-    # predates this file and conflicts with it -- see the open questions
-    # in legacy/README.md. Declaring MIT here follows LICENSE, which is
-    # the authoritative one; resolving the conflict is the owner's call.
-    license="MIT",
+    # CC0 1.0 across the whole repo, matching LICENSE at root and the
+    # per-module "License: CC0" docstrings in knowledge/ and practice/.
+    # The repo previously carried an MIT LICENSE against those CC0
+    # docstrings; the owner resolved it in favor of CC0. See the entry
+    # in legacy/README.md.
+    license="CC0-1.0",
     packages=find_packages(exclude=["tests", "tests.*", "legacy", "legacy.*"]),
     python_requires=">=3.8",
     # The analysis core is pure standard library on purpose -- it must be
@@ -74,7 +74,7 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
-        "License :: OSI Approved :: MIT License",
+        "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
         "Topic :: Text Processing :: Linguistic",
         "Intended Audience :: Education",
     ],

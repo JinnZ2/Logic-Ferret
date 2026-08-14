@@ -117,17 +117,61 @@ def test_pep517_build_declaration_present():
     print("  PASS")
 
 
-def test_license_metadata_matches_license_file():
-    print("[test_license_metadata_matches_license_file]")
+def test_license_is_cc0_everywhere():
+    """The repo carried an MIT LICENSE against CC0 docstrings in
+    knowledge/ for a year -- two incompatible statements about the same
+    code, and nothing detected it. Now pinned in all four places."""
+    print("[test_license_is_cc0_everywhere]")
     license_text = read("LICENSE")
-    source = read("setup.py")
-    declared = re.search(r'^\s*license="([^"]+)"', source, re.MULTILINE)
+    assert "CC0 1.0 Universal" in license_text, "LICENSE is not the CC0 text"
+    assert "Statement of Purpose" in license_text, "LICENSE looks truncated"
+    assert "MIT License" not in license_text, "MIT text still present in LICENSE"
+
+    declared = re.search(r'^\s*license="([^"]+)"', read("setup.py"), re.MULTILINE)
     assert declared, "setup.py declares no license"
-    if "MIT License" in license_text:
-        assert declared.group(1) == "MIT", (
-            f"LICENSE is MIT but setup.py declares {declared.group(1)!r}"
-        )
-    print(f"  LICENSE and setup.py agree on {declared.group(1)}")
+    assert declared.group(1) == "CC0-1.0", (
+        f"setup.py declares {declared.group(1)!r}, LICENSE is CC0"
+    )
+
+    classifiers = re.findall(r'"(License :: [^"]+)"', read("setup.py"))
+    assert classifiers == ["License :: CC0 1.0 Universal (CC0 1.0) Public "
+                           "Domain Dedication"], classifiers
+
+    assert "CC0" in read("README.md"), "README does not state the license"
+    print("  LICENSE, setup.py, classifier and README all say CC0")
+    print("  PASS")
+
+
+def test_no_module_contradicts_the_license():
+    """A per-module 'License: X' docstring that disagrees with LICENSE is
+    how the conflict arose in the first place."""
+    print("[test_no_module_contradicts_the_license]")
+    # Only a line that *is* a declaration counts -- "License:" appearing
+    # mid-sentence is prose about licensing, not a claim being made. This
+    # file is skipped because it necessarily quotes both forms.
+    declaration = re.compile(r"^\s*#?\s*License:\s*([A-Za-z0-9._-]+)")
+    offenders = []
+    for dirpath, dirnames, filenames in os.walk(REPO_ROOT):
+        dirnames[:] = [d for d in dirnames if d not in {".git", "__pycache__"}]
+        for fn in filenames:
+            if not fn.endswith((".py", ".md")):
+                continue
+            path = os.path.join(dirpath, fn)
+            if os.path.abspath(path) == os.path.abspath(__file__):
+                continue
+            for lineno, line in enumerate(
+                open(path, encoding="utf-8", errors="replace"), start=1
+            ):
+                match = declaration.match(line)
+                if match and match.group(1).upper() != "CC0":
+                    offenders.append(
+                        f"{os.path.relpath(path, REPO_ROOT)}:{lineno}: "
+                        f"{match.group(1)}"
+                    )
+    assert not offenders, "modules claiming a non-CC0 license:\n  " + "\n  ".join(
+        offenders
+    )
+    print("  no module declares a license other than CC0")
     print("  PASS")
 
 
@@ -211,7 +255,8 @@ if __name__ == "__main__":
     test_quarantine_and_tests_are_not_shipped()
     test_entry_point_targets_exist()
     test_pep517_build_declaration_present()
-    test_license_metadata_matches_license_file()
+    test_license_is_cc0_everywhere()
+    test_no_module_contradicts_the_license()
     test_readme_does_not_reference_missing_paths()
     test_readme_commands_point_at_real_files()
     test_readme_describes_the_current_repo()

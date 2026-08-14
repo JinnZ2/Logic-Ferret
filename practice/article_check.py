@@ -37,6 +37,8 @@ and it has no idea what the article is about. So:
 There is no grade at the end. A calibration readout is not a score,
 and treating it as one would reproduce the exact failure the rest of
 this repo is built to detect.
+
+License: CC0
 """
 import textwrap
 from dataclasses import dataclass, field

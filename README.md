@@ -73,7 +73,7 @@ practice/             The human-facing check
 knowledge/            Scope-mapping toolkit: what a study actually measured
 integrations/         Adapters to sibling frameworks
 legacy/               Superseded files, kept not deleted, with a lineage record
-tests/                140 tests, no external runner
+tests/                141 tests, no external runner
 ```
 
 ### The tiers
@@ -185,7 +185,15 @@ Full network in [`RELATED.md`](RELATED.md).
 
 ## License
 
-MIT -- see [`LICENSE`](LICENSE).
+**CC0 1.0 Universal** -- see [`LICENSE`](LICENSE).
+
+Public domain dedication. No attribution required, no conditions, no
+notice to preserve. Copy it, fork it, sell it, strip the names out,
+teach from it, fold it into something proprietary -- none of that needs
+asking.
+
+A tool for checking who gets to make claims should not itself come with
+strings attached.
 
 ---
 

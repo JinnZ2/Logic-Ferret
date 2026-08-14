@@ -214,16 +214,34 @@ being answered leaves no evidence it was ever open.
    `tests/test_article_check.py` now runs the full pipeline against
    the file end to end, so it can no longer rot unnoticed.
 
-7. **The repo declares two different licenses.** `LICENSE` at root is
-   MIT (2025, JinnZ2). Every module in `knowledge/`, plus
-   `knowledge/README.md`, declares `License: CC0` in its own
-   docstring. These are not compatible statements about the same code.
-   `setup.py` follows `LICENSE` because that is the conventional
-   authority, and `tests/test_packaging.py` pins the two to agree --
-   but the `knowledge/` docstrings are untouched, because changing a
-   license claim is the owner's call and not a cleanup. If CC0 is
-   intended for that subtree, it needs saying somewhere other than
-   nine docstrings.
+7. ~~**The repo declares two different licenses.**~~ **RESOLVED --
+   CC0 across the board**, on the owner's instruction.
+
+   The conflict: `LICENSE` at root was MIT (2025, JinnZ2), while every
+   module in `knowledge/` plus `knowledge/README.md` declared
+   `License: CC0` in its own docstring. Those are not compatible
+   statements about the same code, and nothing in the repo detected
+   the disagreement -- neither claim is executable.
+
+   The `knowledge/` docstrings turned out to be the ones stating the
+   intent; the MIT `LICENSE` was the leftover. So `LICENSE` now holds
+   the full CC0 1.0 Universal legal code, `setup.py` declares
+   `CC0-1.0` with the matching trove classifier, and `README.md` says
+   so plainly. `practice/` follows the same convention as `knowledge/`.
+
+   Relicensing was safe to do unilaterally here: `git log` shows a
+   single human author across the whole history (JinnZ2), the rest
+   being agent commits made on their behalf. A repo with outside
+   contributors could not be moved off MIT this way -- each
+   contributor licensed their work under the old terms, and only they
+   can relicense it.
+
+   Two tests now hold the line: `test_license_is_cc0_everywhere` pins
+   `LICENSE`, `setup.py`, the classifier and `README.md` together, and
+   `test_no_module_contradicts_the_license` walks every `.py` and `.md`
+   file rejecting any `License:` declaration that is not CC0. The
+   original failure was that four places could disagree silently; now
+   they cannot.
 
 8. **The `practice/` question bank has never been tested on a
    reader.** The eight layer questions are derived from the pipeline's

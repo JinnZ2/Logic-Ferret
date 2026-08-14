@@ -185,7 +185,7 @@ stops being searchable.
 `python tests/run_all.py` runs the whole suite via subprocess.
 Each file is also directly executable:
 `python tests/test_schema_contract.py` etc. No external runner,
-no pytest dependency. 140 tests across 13 files as of the
+no pytest dependency. 141 tests across 13 files as of the
 completion of the knowledge/ reconstruction, the legacy/
 quarantine, and the practice/ article check.
 
