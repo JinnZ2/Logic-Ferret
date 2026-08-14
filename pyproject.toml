@@ -1,0 +1,14 @@
+# Build-system declaration only.
+#
+# Project metadata stays in setup.py because the version is derived from
+# schema_contract.SCHEMA_VERSION at build time rather than duplicated as
+# a literal -- see the comment there.
+#
+# This file exists so pip uses the PEP 517/660 build path instead of the
+# legacy `setup.py develop` one. Without it, `pip install -e .` fails on
+# Debian and Ubuntu, whose patched setuptools raises
+# `AttributeError: install_layout` from the legacy path.
+
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"

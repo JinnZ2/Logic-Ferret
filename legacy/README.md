@@ -165,33 +165,40 @@ and the rationale for seven of eight weights goes with it.
 
 ---
 
-## Open questions (unrun)
+## Open questions
 
-Things this pass surfaced and did **not** resolve. Written down so
-they are searchable later rather than rediscovered.
+Things surfaced and **not** resolved. Written down so they are
+searchable later rather than rediscovered. Resolved entries stay,
+struck through with what closed them -- a question that vanishes on
+being answered leaves no evidence it was ever open.
 
-1. **`README.md` describes a repo that no longer exists.** It
-   presents Logic-Ferret as a Tkinter GUI. Its quick start is
-   `pip install -r requirements.txt` (no such file) and
-   `cd logic-ferret-gui/gui` (no such directory). It does not mention
-   the sensor suite, the 9-layer pipeline, `schema_contract`, or
-   `knowledge/`. Not moved here: it is the repo's front door, and
-   replacing it is a scope call for the owner.
+1. ~~**`README.md` describes a repo that no longer exists.**~~
+   **RESOLVED.** Rewritten as an accurate front door: both entry
+   points, the tier table, the nine layers, an explicit limits
+   section, and an install path that works. `tests/test_packaging.py`
+   now reads the README as a set of claims -- every `python <file>`
+   command must name a file that exists, every relative link must
+   resolve, and the phantom `requirements.txt` and
+   `logic-ferret-gui/gui` paths are asserted absent.
 
-2. **`setup.py` still declares the GUI as the product** --
-   `name="logic-ferret-gui"`, version `0.1.0`, description "A
-   sarcastic bullshit detector GUI", `install_requires=["tk"]`,
-   entry point `fallacy_gui:main`. Meanwhile `schema_contract.py`
-   independently versions the public surface at `1.2.0`. Two version
-   numbers, neither referencing the other. Changing a published
-   package name is outward-facing, so it was left alone.
+2. ~~**`setup.py` still declares the GUI as the product.**~~
+   **RESOLVED.** Renamed to `logic-ferret`; the version is now parsed
+   out of `schema_contract.SCHEMA_VERSION` at build time instead of
+   being a second hand-maintained literal, so the 0.1.0-vs-1.2.0 split
+   cannot recur. `tests/` and `legacy/` are excluded from the
+   distribution, `install_requires` is empty (the analysis core is
+   pure stdlib), and a `pyproject.toml` was added so `pip install -e .`
+   uses the PEP 517 path -- without it the legacy `setup.py develop`
+   path fails on Debian and Ubuntu with
+   `AttributeError: install_layout`.
 
-3. **`fallacy_gui.py` was not retired.** It still runs and is the
-   live `console_scripts` target, but it reaches exactly one of
-   fourteen sensors (`annotate_text`). It is the original scope of
-   the project, surviving as the entry point of the current one.
-   Whether it should grow to the full suite or be retired to
-   `legacy/` is a product decision, not a cleanup.
+3. **`fallacy_gui.py` was not retired.** It still runs and is a live
+   `console_scripts` target, but it reaches exactly one of fourteen
+   sensors (`annotate_text`). It is the original scope of the project,
+   surviving as an entry point of the current one. Whether it should
+   grow to the full suite or be retired to `legacy/` is a product
+   decision, not a cleanup. It is now `logic-ferret-gui`, no longer
+   the primary `logic-ferret` command.
 
 4. **`truth_integrity_score.py` at repo root is a live shim**, not
    legacy -- it re-exports `calculate_c3` from the canonical module
@@ -202,14 +209,25 @@ they are searchable later rather than rediscovered.
    sensor; nine reads 0.9. Whether 10 is calibrated or arbitrary is
    unrecorded, and it survived the polarity fix unexamined.
 
-6. **`examples/offshore_wind_radar.txt` is undocumented, not
-   unusable.** No test, README, or runner names it. It does work --
-   both runners accept it and the pipeline scores it RED:
+6. ~~**`examples/offshore_wind_radar.txt` is referenced by nothing.**~~
+   **RESOLVED.** The invocation is documented in `README.md`, and
+   `tests/test_article_check.py` now runs the full pipeline against
+   the file end to end, so it can no longer rot unnoticed.
 
-   ```
-   python run_full_sensor_scan.py examples/offshore_wind_radar.txt
-   python run_conflict_diagnosis.py examples/offshore_wind_radar.txt
-   ```
+7. **The repo declares two different licenses.** `LICENSE` at root is
+   MIT (2025, JinnZ2). Every module in `knowledge/`, plus
+   `knowledge/README.md`, declares `License: CC0` in its own
+   docstring. These are not compatible statements about the same code.
+   `setup.py` follows `LICENSE` because that is the conventional
+   authority, and `tests/test_packaging.py` pins the two to agree --
+   but the `knowledge/` docstrings are untouched, because changing a
+   license claim is the owner's call and not a cleanup. If CC0 is
+   intended for that subtree, it needs saying somewhere other than
+   nine docstrings.
 
-   Recording the invocation here because it took reading two runners
-   to recover it, and nothing else in the repo says it.
+8. **The `practice/` question bank has never been tested on a
+   reader.** The eight layer questions are derived from the pipeline's
+   layers, which is principled, but "principled" is a hypothesis about
+   pedagogy, not a result. Whether a person using the worksheet
+   actually reads more carefully afterward is unmeasured. Recorded
+   here rather than assumed, per the point of this directory.

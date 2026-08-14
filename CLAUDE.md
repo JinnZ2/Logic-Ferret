@@ -39,6 +39,11 @@ Logic-Ferret/
     meritocracy_detector.py
     logic_fallacy_ferret.py
 
+  practice/                      # human-facing exercises (outside the contract)
+    README.md                    # how the article check works and why
+    article_check.py             # question bank + blind-first comparison
+  run_article_check.py           # CLI: worksheet, interactive, --answers replay
+
   integrations/                  # adapters to sibling frameworks (standalone)
     financial_text.py            # v0 adapter for money_signal/investment_signal
 
@@ -73,6 +78,8 @@ Logic-Ferret/
     test_informational_cost_audit.py
     test_knowledge_integrity.py  # damage-pattern regression guard + smoke tests
     test_legacy_quarantine.py    # legacy/ inertness + lineage record
+    test_article_check.py        # question bank, comparison, blind-first order
+    test_packaging.py            # setup.py/README claims checked as claims
 ```
 
 ## Intent routing
@@ -93,6 +100,8 @@ Use this to jump to the right module for what you're doing:
 | Explain why false certainty is expensive | `knowledge.informational_cost_audit` (pure data) |
 | Understand the tier taxonomy | `schema_contract.TIER_LEVELS` + `SIGNAL_TO_TIER` |
 | See cross-framework integration | `RELATED.md` |
+| Practice reading an article yourself | `run_article_check.py` |
+| Print a no-computer worksheet | `run_article_check.py --worksheet` |
 | Find out why a claim changed | `legacy/README.md` |
 | Retire a superseded file | `legacy/` + an entry (see below) |
 
@@ -110,6 +119,35 @@ The two companion modules in `knowledge/` (study_scope_audit,
 informational_cost_audit) are **outside** the schema contract.
 Their stability is documented via their `__all__` lists. They
 are NOT versioned through `SCHEMA_VERSION`.
+
+`practice/` is outside the contract for the same reason: it is
+pedagogy, and it should be free to change without a version bump.
+Its stability is documented by `__all__` in `practice/__init__.py`.
+
+`setup.py` no longer carries its own version literal -- it parses
+`SCHEMA_VERSION` out of `schema_contract.py` at build time. Two
+hand-maintained version numbers is how the package spent a year
+claiming 0.1.0 while the contract said 1.2.0.
+
+## The blind-first rule in practice/
+
+`practice/article_check.py` must not reveal machine output before a
+complete human read exists. `machine_read()` is called only after
+`HumanRead.validate()` passes, and the blank worksheet renders without
+importing the sensor suite at all.
+
+This is not stylistic. Showing a reader a camouflage score and then
+asking what they think produces agreement, not judgment -- and it
+would still look like the tool was working. Two tests pin it:
+`test_machine_read_not_reachable_from_worksheet` and
+`test_report_requires_complete_read`. An unrated layer raises rather
+than defaulting to GREEN, because defaulting would credit the reader
+with a judgment they never made.
+
+The report deliberately refuses to grade.
+`test_agreement_is_not_reported_as_success` asserts that the phrases
+"not a grade" and "weak evidence" appear, and that congratulatory
+framing does not.
 
 ## Retiring a file (the legacy/ convention)
 
@@ -147,9 +185,9 @@ stops being searchable.
 `python tests/run_all.py` runs the whole suite via subprocess.
 Each file is also directly executable:
 `python tests/test_schema_contract.py` etc. No external runner,
-no pytest dependency. 107 tests across 11 files as of the
-completion of the knowledge/ reconstruction and the legacy/
-quarantine.
+no pytest dependency. 140 tests across 13 files as of the
+completion of the knowledge/ reconstruction, the legacy/
+quarantine, and the practice/ article check.
 
 `tests/test_knowledge_integrity.py` is the regression guard for
 the damage described below. It asserts each of the four damage
