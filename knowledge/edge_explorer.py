@@ -7,7 +7,7 @@ This is the play layer. The shadow is GENERATIVE here, not restrictive.
 Given a scope boundary, we push outward and ask: what lives beyond the edge?
 What would flip the finding's sign? What puzzle piece is this, really?
 
-This is the meditative practice Kavik described: take a study, trace the
+The practice this implements: take a study, trace the
 shadow, ask the questions the researchers didn't ask.
 
 License: CC0
