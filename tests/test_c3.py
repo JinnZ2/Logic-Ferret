@@ -72,13 +72,18 @@ def test_discourse_collapse_weighted_highest():
     print("  PASS")
 
 
-def test_unknown_sensor_gets_default_weight():
-    print("[test_unknown_sensor_gets_default_weight]")
-    c3, br = tis.calculate_c3({"Some New Sensor": 1.0})
-    # default weight 1.0, contribution 1.0 * 1.0 = 1.0
-    assert br["Some New Sensor"] == 1.0
-    print(f"  unknown sensor gets weight 1.0; c3={c3}")
-    print("  PASS")
+def test_unknown_sensor_raises():
+    # was (until 2026-11-20): test_unknown_sensor_gets_default_weight
+    #   c3, br = tis.calculate_c3({"Some New Sensor": 1.0})
+    #   assert br["Some New Sensor"] == 1.0      # default weight 1.0
+    print("[test_unknown_sensor_raises]")
+    try:
+        tis.calculate_c3({"Some New Sensor": 1.0})
+    except tis.UnknownSensorName as e:
+        print(f"  unknown name raises: {e}")
+        print("  PASS")
+        return
+    raise AssertionError("unknown sensor name did not raise")
 
 
 def test_breakdown_includes_every_input():
@@ -86,10 +91,63 @@ def test_breakdown_includes_every_input():
     scores = {
         "Propaganda Tone": 0.3,
         "Discourse Collapse": 0.8,
-        "Mystery Sensor": 0.5,
+        # was "Mystery Sensor": 0.5 (an unlisted name; raises since 2026-11-20)
+        "Gaslight Frequency": 0.5,
     }
     c3, br = tis.calculate_c3(scores)
     assert set(br.keys()) == set(scores.keys())
+    print("  PASS")
+
+
+def test_every_scan_sensor_resolves():
+    """Every name in run_full_sensor_scan.SENSORS has a WEIGHT_KEY row,
+    and every mapped row points at an existing _WEIGHTS key."""
+    print("[test_every_scan_sensor_resolves]")
+    import run_full_sensor_scan as scan
+    scan_names = [n for n, _ in scan.SENSORS]
+    assert set(scan_names) == set(tis.WEIGHT_KEY), (
+        f"scan vs WEIGHT_KEY: only in scan "
+        f"{sorted(set(scan_names) - set(tis.WEIGHT_KEY))}, only in table "
+        f"{sorted(set(tis.WEIGHT_KEY) - set(scan_names))}"
+    )
+    void = []
+    for name in scan_names:
+        key = tis.WEIGHT_KEY[name]
+        if key is tis.VOID:
+            void.append(name)
+            assert tis.resolve_weight(name) == tis.VOID_HELD_WEIGHT
+        else:
+            assert key in tis._WEIGHTS, f"{name} -> {key!r}: no such weight"
+            assert tis.resolve_weight(name) == tis._WEIGHTS[key]
+    print(f"  {len(scan_names)} scan names; {len(scan_names) - len(void)} mapped; "
+          f"{len(void)} VOID: {void}")
+    print("  PASS")
+
+
+def test_orphan_weight_keys_are_listed():
+    """A _WEIGHTS key no scan sensor maps to must be listed in
+    ORPHAN_WEIGHT_KEYS; the list holds nothing else."""
+    print("[test_orphan_weight_keys_are_listed]")
+    used = {k for k in tis.WEIGHT_KEY.values() if k is not tis.VOID}
+    orphans = sorted(set(tis._WEIGHTS) - used)
+    assert orphans == sorted(tis.ORPHAN_WEIGHT_KEYS), (
+        f"orphans {orphans} != listed {sorted(tis.ORPHAN_WEIGHT_KEYS)}"
+    )
+    print(f"  orphan weight keys (listed): {orphans}")
+    print("  PASS")
+
+
+def test_scan_c3_unchanged_for_listed_names():
+    """For the 13 scan names the weights equal the pre-change ones
+    (7 from _WEIGHTS, 6 at the old default 1.0)."""
+    print("[test_scan_c3_unchanged_for_listed_names]")
+    import run_full_sensor_scan as scan
+    scores = {n: 0.1 * (i + 1) for i, (n, _) in enumerate(scan.SENSORS)}
+    old_total = sum(s * tis._WEIGHTS.get(n, 1.0) for n, s in scores.items())
+    old_sum = sum(tis._WEIGHTS.get(n, 1.0) for n in scores)
+    c3, _ = tis.calculate_c3(scores)
+    assert abs(c3 - min(old_total / old_sum, 1.0)) < 1e-12
+    print(f"  c3={c3:.6f} equals the old formula")
     print("  PASS")
 
 
@@ -98,6 +156,9 @@ if __name__ == "__main__":
     test_c3_returns_signature()
     test_c3_caps_at_one()
     test_discourse_collapse_weighted_highest()
-    test_unknown_sensor_gets_default_weight()
+    test_unknown_sensor_raises()
     test_breakdown_includes_every_input()
+    test_every_scan_sensor_resolves()
+    test_orphan_weight_keys_are_listed()
+    test_scan_c3_unchanged_for_listed_names()
     print("\nall C3 tests passed.")
