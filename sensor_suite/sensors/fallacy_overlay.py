@@ -28,3 +28,13 @@ def annotate_text(text: str) -> Tuple[str, Dict[str, int]]:
             annotated = annotated[:start] + tag + annotated[start:end] + tag + annotated[end:]
 
     return annotated, counts
+
+
+# Note 2026-11-20: added so this module has the same assess(text) -> (score, flags) shape
+# as the other sensors. Ported from a5ff55b (claude/add-claude-documentation-4a69p).
+def assess(text: str) -> Tuple[float, Dict[str, int]]:
+    """Higher score = more fallacy patterns matched. Ten matches or more give 1.0."""
+    _, counts = annotate_text(text)
+    total = sum(counts.values())
+    score = min(total / 10.0, 1.0)
+    return score, counts
