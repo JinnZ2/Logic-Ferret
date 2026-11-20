@@ -27,6 +27,14 @@ _WEIGHTS = {
     "Discourse Collapse":  2.0,
 }
 
+# Note 2026-11-20: sensors where a higher score is the good direction. Their scores are
+# inverted before weighting, so that more accountability lowers C3 instead of raising it.
+# Until this change every score was added as-is. Names are the keys used in
+# run_full_sensor_scan.SENSORS on main. Ported from a5ff55b
+# (claude/add-claude-documentation-4a69p), which used the key "Meritocracy".
+POSITIVE_SENSORS = {"True Accountability", "Meritocracy Detector"}
+
+
 def calculate_c3(sensor_scores: Dict[str, float]) -> Tuple[float, Dict[str, float]]:
     weights = _WEIGHTS
 
@@ -37,10 +45,13 @@ def calculate_c3(sensor_scores: Dict[str, float]) -> Tuple[float, Dict[str, floa
 
     for name, score in sensor_scores.items():
         w = weights.get(name, 1.0)
-        weighted_total += score * w
+        effective = (1.0 - score) if name in POSITIVE_SENSORS else score
+        weighted_total += effective * w
         weight_sum += w
-        debug_weights[name] = round(score * w, 3)
+        debug_weights[name] = round(effective * w, 3)
 
-    c3_score = min(weighted_total / weight_sum, 1.0)
+    # Note 2026-11-20: was `min(weighted_total / weight_sum, 1.0)`, which raised
+    # ZeroDivisionError on an empty dict. No scores now gives 0.0.
+    c3_score = min(weighted_total / weight_sum, 1.0) if weight_sum else 0.0
 
     return c3_score, debug_weights
