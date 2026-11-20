@@ -169,6 +169,10 @@ ANNOTATE_TEXT: Callable[[str], Tuple[str, Dict[str, int]]] = (
 #   -> (c3_score: float in [0.0, 1.0], weighted_breakdown: Dict[str, float])
 # Keys of `scores` should be drawn from SENSOR_REGISTRY; unknown
 # keys are accepted with a default weight of 1.0.
+# Note 2026-11-20 (line above kept as written): an unknown key now
+# raises truth_integrity_score.UnknownSensorName. Names resolve
+# through truth_integrity_score.WEIGHT_KEY; six registry names are
+# VOID there (no weight written) and hold the old 1.0 by name.
 # ------------------------------------------------------------
 
 CALCULATE_C3: Callable[[Dict[str, float]], Tuple[float, Dict[str, float]]] = (
