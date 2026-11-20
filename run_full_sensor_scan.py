@@ -39,12 +39,14 @@ SENSORS = [
 
 def run_all(text: str):
     sensor_results: Dict[str, float] = {}
+    sensor_flags: Dict[str, dict] = {}
 
     print("FULL SENSOR FUSION ANALYSIS\n" + "=" * 50)
     for name, sensor in SENSORS:
         try:
             score, flags = sensor(text)
             sensor_results[name] = score
+            sensor_flags[name] = flags
             print(f"\n{name} Score: {score:.2f}")
             for k, v in flags.items():
                 print(f"  - {k}: {v}")
@@ -54,7 +56,10 @@ def run_all(text: str):
     # Composite Score
     print("\nCalculating Composite Truth Integrity Score...")
     try:
-        c3_score, weighted_breakdown = truth_integrity_score.calculate_c3(sensor_results)
+        void = truth_integrity_score.void_positive_sensors(sensor_flags)
+        c3_score, weighted_breakdown = truth_integrity_score.calculate_c3(sensor_results, void=void)
+        for name in sorted(void):
+            print(f"  VOID (no matches, left out of C3): {name}")
         print(f"\nC3 Score (Truth Integrity): {c3_score:.2f}\n")
         print("Weighted Contributions:")
         for k, v in weighted_breakdown.items():

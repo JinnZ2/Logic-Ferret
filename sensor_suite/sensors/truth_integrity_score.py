@@ -35,7 +35,31 @@ _WEIGHTS = {
 POSITIVE_SENSORS = {"True Accountability", "Meritocracy Detector"}
 
 
-def calculate_c3(sensor_scores: Dict[str, float]) -> Tuple[float, Dict[str, float]]:
+def void_positive_sensors(flags_by_sensor: Dict[str, dict]) -> set:
+    """
+    Names of positive sensors that matched nothing in the text.
+
+    Note 2026-11-20 (second branch of the inversion change): a positive sensor whose
+    count flags are all zero has measured nothing. Inverting its 0.0 to 1.0 would read
+    "no accountability phrases found" as "full distortion". Such a sensor is VOID: it is
+    left out of the sum and out of the weight total.
+
+    A positive sensor that scores 0.0 because its negative counts outweigh its positive
+    ones has measured something and is not VOID. That is why this reads the count flags
+    and not the score.
+    """
+    void = set()
+    for name in POSITIVE_SENSORS:
+        flags = flags_by_sensor.get(name)
+        if flags is None:
+            continue
+        counts = [v for v in flags.values() if isinstance(v, int) and not isinstance(v, bool)]
+        if counts and sum(counts) == 0:
+            void.add(name)
+    return void
+
+
+def calculate_c3(sensor_scores: Dict[str, float], void=()) -> Tuple[float, Dict[str, float]]:
     weights = _WEIGHTS
 
     weighted_total = 0
@@ -44,6 +68,10 @@ def calculate_c3(sensor_scores: Dict[str, float]) -> Tuple[float, Dict[str, floa
     debug_weights = {}
 
     for name, score in sensor_scores.items():
+        if name in void:
+            # VOID: not measured. No contribution and no weight; the remaining
+            # sensors are renormalized by their own weight total.
+            continue
         w = weights.get(name, 1.0)
         effective = (1.0 - score) if name in POSITIVE_SENSORS else score
         weighted_total += effective * w

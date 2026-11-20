@@ -86,7 +86,61 @@ def test_fallacy_overlay_assess():
     print("  PASS")
 
 
+QUIET_TEXT = "The pump moved 40 litres in ten minutes."
+
+
+def _scan(text):
+    """Scores and flags from every sensor in run_full_sensor_scan.SENSORS."""
+    import run_full_sensor_scan as scan
+    scores, flags = {}, {}
+    for name, sensor in scan.SENSORS:
+        scores[name], flags[name] = sensor(text)
+    return scores, flags
+
+
+def test_void_positive_sensor_on_quiet_text():
+    print("[test_void_positive_sensor_on_quiet_text]")
+    scores, flags = _scan(QUIET_TEXT)
+    void = tis.void_positive_sensors(flags)
+    before = c3_before(scores)
+    branch1, _ = tis.calculate_c3(scores)             # inversion only
+    branch2, br2 = tis.calculate_c3(scores, void=void)  # inversion + VOID
+    print(f"  text: {QUIET_TEXT!r}")
+    print(f"  void: {sorted(void)}")
+    print(f"  main formula: c3={before:.4f}")
+    print(f"  branch 1 (inversion only):   c3={branch1:.4f}")
+    print(f"  branch 2 (inversion + VOID): c3={branch2:.4f}")
+    assert void == tis.POSITIVE_SENSORS
+    assert branch1 > 0.0      # two unmeasured sensors read as full distortion
+    assert branch2 == before  # nothing measured, nothing added
+    assert not (void & set(br2))
+    print("  PASS")
+
+
+def test_measured_zero_is_not_void():
+    print("[test_measured_zero_is_not_void]")
+    # Meritocracy Detector scores 0.0 when negative counts outweigh positive ones.
+    flags = {"Meritocracy Detector": {"Competence Indicators": 0, "Merit-Based Language": 0,
+                                      "False Authority Appeals": 2, "Favoritism Signals": 1,
+                                      "Meritocracy Score": "0.00"}}
+    assert tis.void_positive_sensors(flags) == set()
+    c3, br = tis.calculate_c3({"Meritocracy Detector": 0.0}, void=tis.void_positive_sensors(flags))
+    print(f"  measured zero -> not void, c3={c3:.4f}")
+    assert c3 == 1.0 and "Meritocracy Detector" in br
+    print("  PASS")
+
+
+def test_all_void_gives_zero():
+    print("[test_all_void_gives_zero]")
+    c3, br = tis.calculate_c3({"True Accountability": 0.0}, void={"True Accountability"})
+    assert c3 == 0.0 and br == {}
+    print("  PASS")
+
+
 if __name__ == "__main__":
+    test_void_positive_sensor_on_quiet_text()
+    test_measured_zero_is_not_void()
+    test_all_void_gives_zero()
     test_accountability_lowers_c3()
     test_negative_sensors_unchanged()
     test_empty_scores_give_zero()
